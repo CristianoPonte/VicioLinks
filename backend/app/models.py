@@ -1,0 +1,75 @@
+from pydantic import BaseModel, Field, validator
+from typing import List, Optional, Dict, Any
+from datetime import datetime
+
+class Launch(BaseModel):
+    id: Optional[str] = Field(None, alias="_id")
+    slug: str
+    nome: str
+    data_inicio: Optional[datetime] = None
+    data_fim: Optional[datetime] = None
+    owner: str
+    status: str = "active"
+
+class Product(BaseModel):
+    slug: str
+    nome: str
+
+class Turma(BaseModel):
+    slug: str
+    nome: str
+
+class LaunchType(BaseModel):
+    slug: str # evento, passariano, perpetuo
+    nome: str
+
+class MediumConfig(BaseModel):
+    slug: str  # e.g., "newsletter", "grupos_antigos"
+    name: str  # e.g., "Newsletter", "Grupos Antigos"
+    allowed_contents: List[str] = [] # e.g. ["lista_atual", "lista_antiga"]
+
+class SourceConfig(BaseModel):
+    id: Optional[str] = Field(None, alias="_id")
+    slug: str # e.g., "email", "whatsapp", "site"
+    name: str # e.g., "Email", "WhatsApp"
+    mediums: List[MediumConfig] = []
+    required_fields: List[str] = [] # e.g. ["date"] for Email
+    term_config: Optional[str] = "standard" # "standard" (text+date), "no_date" (for Site)
+
+class LinkCreate(BaseModel):
+    link_type: str = "captacao" # captacao or vendas
+    base_url: str
+    path: Optional[str] = ""
+    utm_source: str
+    utm_medium: str
+    utm_campaign: str
+    utm_content: Optional[str] = None
+    utm_term: Optional[str] = None
+    custom_params: Dict[str, str] = {}
+    notes: Optional[str] = None
+    dynamic_fields: Dict[str, Any] = {}
+    # For Vendas mapping
+    src: Optional[str] = None
+    sck: Optional[str] = None
+    xcode: Optional[str] = None
+
+class Link(BaseModel):
+    id: str # utm_id (lnk_000001)
+    link_type: str # captacao or vendas
+    base_url: str
+    path: str
+    full_url: str
+    utm_source: str
+    utm_medium: str
+    utm_campaign: str
+    utm_content: Optional[str] = None
+    utm_term: Optional[str] = None
+    # For Vendas
+    src: Optional[str] = None
+    sck: Optional[str] = None
+    xcode: Optional[str] = None
+    custom_params: Dict[str, str] = {}
+    notes: Optional[str] = None
+    created_by: str
+    created_at: datetime
+    status: str = "active"
