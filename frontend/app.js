@@ -20,13 +20,160 @@ let editingMode = {
     parentMedium: null    // for contents
 };
 
+// Auth State
+let currentUser = null;
+let authToken = localStorage.getItem('authToken');
+
 // Initialization
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('App DOMContentLoaded. Initializing...');
-    await initApp();
+
+    // Check Auth first
+    if (!authToken) {
+        showLoginScreen();
+    } else {
+        await verifyTokenAndInit();
+    }
+
     setupEventListeners();
-    console.log('Initialization complete.');
+    setupAuthListeners();
 });
+
+async function verifyTokenAndInit() {
+    try {
+        const res = await authFetch(`${API_BASE}/users/me`);
+        if (res.ok) {
+            currentUser = await res.json();
+            document.getElementById('user-name').innerText = currentUser.username;
+            updateUIForRole(currentUser.role);
+            hideLoginScreen();
+            await initApp();
+        } else {
+            handleLogout();
+        }
+    } catch (err) {
+        console.error("Auth check failed", err);
+        handleLogout();
+    }
+}
+
+function updateUIForRole(role) {
+    const navGenerate = document.getElementById('nav-generate');
+    const navAdmin = document.getElementById('nav-admin');
+    const navUsers = document.getElementById('nav-users');
+
+    // Reset visibility
+    if (navGenerate) navGenerate.parentElement.style.display = 'block';
+    if (navAdmin) navAdmin.parentElement.style.display = 'block';
+    if (navUsers) navUsers.classList.add('hidden');
+
+    if (role === 'admin') {
+        if (navUsers) navUsers.classList.remove('hidden');
+    } else if (role === 'viewer') {
+        if (navGenerate) navGenerate.parentElement.style.display = 'none';
+        if (navAdmin) navAdmin.parentElement.style.display = 'none';
+        showScreen('list');
+    } else if (role === 'user') {
+        if (navAdmin) navAdmin.parentElement.style.display = 'none';
+        // If on admin screen, move to generate
+        if (!document.getElementById('screen-admin').classList.contains('hidden')) {
+            showScreen('generate');
+        }
+    }
+}
+
+async function authFetch(url, options = {}) {
+    const headers = options.headers || {};
+    if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    const newOptions = { ...options, headers };
+    const res = await fetch(url, newOptions);
+    if (res.status === 401) {
+        handleLogout();
+    }
+    return res;
+}
+
+function showLoginScreen() {
+    const overlay = document.getElementById('login-overlay');
+    const app = document.getElementById('app-container');
+    if (overlay) overlay.classList.remove('hidden');
+    if (app) app.classList.add('hidden');
+}
+
+function hideLoginScreen() {
+    const overlay = document.getElementById('login-overlay');
+    const app = document.getElementById('app-container');
+    if (overlay) overlay.classList.add('hidden');
+    if (app) app.classList.remove('hidden');
+}
+
+function handleLogout() {
+    localStorage.removeItem('authToken');
+    authToken = null;
+    currentUser = null;
+    showLoginScreen();
+}
+
+function setupAuthListeners() {
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const btn = loginForm.querySelector('button');
+
+            try {
+                btn.disabled = true;
+                btn.innerText = 'Autenticando...';
+
+                const formData = new URLSearchParams();
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const res = await fetch(`${API_BASE}/token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    authToken = data.access_token;
+                    localStorage.setItem('authToken', authToken);
+                    await verifyTokenAndInit();
+                } else {
+                    alert('Usuário ou senha incorretos.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro na conexão com o servidor.');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Entrar no Sistema';
+            }
+        });
+    }
+
+    // Logout on clicking avatar or name specifically
+    const avatar = document.querySelector('.avatar');
+    const userName = document.getElementById('user-name');
+
+    [avatar, userName].forEach(el => {
+        if (el) {
+            el.style.cursor = 'pointer';
+            el.title = 'Clique para Sair';
+            el.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent bubbling just in case
+                if (confirm('Deseja sair do sistema?')) {
+                    handleLogout();
+                }
+            });
+        }
+    });
+}
 
 async function initApp() {
     try {
@@ -173,7 +320,8 @@ function showScreen(screen) {
     const screenElements = {
         generate: document.getElementById('screen-generate'),
         list: document.getElementById('screen-list'),
-        admin: document.getElementById('screen-admin')
+        admin: document.getElementById('screen-admin'),
+        users: document.getElementById('screen-users')
     };
     const nLinks = {
         generate: document.getElementById('nav-generate'),
@@ -215,25 +363,25 @@ function setAdminTab(tab) {
 
 // Fetch Functions
 async function fetchProducts() {
-    const res = await fetch(`${API_BASE}/products`);
+    const res = await authFetch(`${API_BASE}/products`);
     products = await res.json();
     populateSelect('gen-product', products);
 }
 
 async function fetchTurmas() {
-    const res = await fetch(`${API_BASE}/turmas`);
+    const res = await authFetch(`${API_BASE}/turmas`);
     turmas = await res.json();
     populateSelect('gen-turma', turmas);
 }
 
 async function fetchLaunchTypes() {
-    const res = await fetch(`${API_BASE}/launch-types`);
+    const res = await authFetch(`${API_BASE}/launch-types`);
     launchTypes = await res.json();
     populateSelect('gen-type', launchTypes);
 }
 
 async function fetchSourceConfigs() {
-    const res = await fetch(`${API_BASE}/source-configs`);
+    const res = await authFetch(`${API_BASE}/source-configs`);
     sourceConfigs = await res.json();
 
     populateSelect('channel', sourceConfigs.map(s => ({ slug: s.slug, nome: s.name })));
@@ -244,7 +392,7 @@ async function fetchSourceConfigs() {
 }
 
 async function fetchLaunches() {
-    const res = await fetch(`${API_BASE}/launches`);
+    const res = await authFetch(`${API_BASE}/launches`);
     const launches = await res.json();
     populateCampaignDropdown(launches);
     populateSelect('filter-campaign', launches.map(l => ({ slug: l.slug, nome: l.nome || l.slug })));
@@ -252,7 +400,7 @@ async function fetchLaunches() {
 }
 
 async function fetchLinks() {
-    const res = await fetch(`${API_BASE}/links`);
+    const res = await authFetch(`${API_BASE}/links`);
     currentLinks = await res.json();
     renderLinksTable();
 }
@@ -377,7 +525,7 @@ async function saveGeneratedCampaign() {
     if (btn) btn.disabled = true;
 
     try {
-        const res = await fetch(`${API_BASE}/launches`, {
+        const res = await authFetch(`${API_BASE}/launches`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ slug, nome: nome, owner: 'admin', status: 'active' })
@@ -441,7 +589,7 @@ async function handleGenerateLink(e) {
     };
 
     try {
-        const res = await fetch(`${API_BASE}/links/generate`, {
+        const res = await authFetch(`${API_BASE}/links/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -499,7 +647,7 @@ function editItem(type, slug, parentS = null, parentM = null) {
         // For now, let's use a prompt to be quick as requested, or just renaming via API.
         const newName = prompt("Digite o novo nome para a Campaign:", slug);
         if (newName) {
-            fetch(`${API_BASE}/launches`, {
+            authFetch(`${API_BASE}/launches`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ slug, nome: newName, owner: 'admin', status: 'active' })
@@ -603,7 +751,7 @@ function renderCampaignSettingsTab() {
     if (ltList) ltList.innerHTML = render(launchTypes, 'launch-types', 'fetchLaunchTypes');
 
     if (lList) {
-        fetch(`${API_BASE}/launches`).then(res => res.json()).then(launches => {
+        authFetch(`${API_BASE}/launches`).then(res => res.json()).then(launches => {
             lList.innerHTML = launches.map(l => {
                 const name = l.nome || l.slug;
                 const slug = l.slug;
@@ -721,13 +869,13 @@ async function handleAdminSourceSubmit(e) {
         const oldSource = sourceConfigs.find(s => s.slug === editingMode.oldSlug);
         payload = { ...oldSource, slug, name, term_config: term };
         if (slug !== editingMode.oldSlug) {
-            await fetch(`${API_BASE}/source-configs/${editingMode.oldSlug}`, { method: 'DELETE' });
+            await authFetch(`${API_BASE}/source-configs/${editingMode.oldSlug}`, { method: 'DELETE' });
         }
     } else {
         payload = { slug, name, mediums: [], term_config: term };
     }
 
-    await fetch(`${API_BASE}/source-configs`, {
+    await authFetch(`${API_BASE}/source-configs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -745,11 +893,11 @@ async function handleAdminSimpleSubmit(e, endpoint, refresh) {
 
     if (editingMode.active && editingMode.type === endpoint) {
         if (slug !== editingMode.oldSlug) {
-            await fetch(`${API_BASE}/${endpoint}/${editingMode.oldSlug}`, { method: 'DELETE' });
+            await authFetch(`${API_BASE}/${endpoint}/${editingMode.oldSlug}`, { method: 'DELETE' });
         }
     }
 
-    await fetch(`${API_BASE}/${endpoint}`, {
+    await authFetch(`${API_BASE}/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug, nome })
@@ -776,7 +924,7 @@ async function handleAdminMediumSubmit(e) {
         source.mediums.push({ slug, name, allowed_contents: [] });
     }
 
-    await fetch(`${API_BASE}/source-configs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(source) });
+    await authFetch(`${API_BASE}/source-configs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(source) });
     resetAdminForm('admin-medium-form-new', 'mediums');
     await fetchSourceConfigs();
     renderAdminLists();
@@ -795,21 +943,21 @@ async function handleAdminContentSubmit(e) {
         medium.allowed_contents.push(val);
     }
 
-    await fetch(`${API_BASE}/source-configs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(source) });
+    await authFetch(`${API_BASE}/source-configs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(source) });
     resetAdminForm('admin-content-form-new', 'contents');
     await fetchSourceConfigs();
     renderAdminLists();
 }
 
 async function deleteSimpleItem(ep, id, refresh) {
-    if (confirm('Tem certeza que deseja remover este item?')) { await fetch(`${API_BASE}/${ep}/${id}`, { method: 'DELETE' }); await refresh(); renderAdminLists(); }
+    if (confirm('Tem certeza que deseja remover este item?')) { await authFetch(`${API_BASE}/${ep}/${id}`, { method: 'DELETE' }); await refresh(); renderAdminLists(); }
 }
 
 async function deleteMedium(s, m) {
     if (!confirm('Tem certeza que deseja remover este meio?')) return;
     const source = sourceConfigs.find(sc => sc.slug === s);
     source.mediums = source.mediums.filter(ms => ms.slug !== m);
-    await fetch(`${API_BASE}/source-configs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(source) });
+    await authFetch(`${API_BASE}/source-configs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(source) });
     await fetchSourceConfigs(); renderAdminLists();
 }
 
@@ -818,15 +966,23 @@ async function deleteContent(s, m, c) {
     const source = sourceConfigs.find(sc => sc.slug === s);
     const medium = source.mediums.find(ms => ms.slug === m);
     medium.allowed_contents = medium.allowed_contents.filter(cs => cs !== c);
-    await fetch(`${API_BASE}/source-configs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(source) });
+    await authFetch(`${API_BASE}/source-configs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(source) });
     await fetchSourceConfigs(); renderAdminLists();
 }
 
 // Helpers
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    if (toast) {
+        toast.innerText = message;
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+}
+
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text);
-    const toast = document.getElementById('toast');
-    if (toast) { toast.classList.remove('hidden'); setTimeout(() => toast.classList.add('hidden'), 3000); }
+    showToast("Copiado para a área de transferência!");
 }
 
 function splitTerm(term) {
@@ -900,4 +1056,122 @@ function exportToCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+/** USER MANAGEMENT LOGIC **/
+
+// Add basic listener in setupEventListeners if I could, but I'll add them here for convenience
+document.addEventListener('click', e => {
+    if (e.target.id === 'nav-users') {
+        showScreen('users');
+        loadUsers();
+    }
+});
+
+async function loadUsers() {
+    try {
+        const res = await authFetch(`${API_BASE}/users`);
+        if (res.ok) {
+            const users = await res.json();
+            renderUsers(users);
+        }
+    } catch (err) {
+        console.error("Failed to load users", err);
+    }
+}
+
+function renderUsers(users) {
+    const list = document.getElementById('users-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    users.forEach(u => {
+        const item = document.createElement('div');
+        item.className = 'user-item';
+        item.innerHTML = `
+            <div class="user-info">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <h4 style="margin: 0; font-size: 0.95rem;">${u.username}</h4>
+                    <span class="role-badge" style="font-size: 0.65rem; padding: 0.1rem 0.5rem;">${u.role}</span>
+                    ${u.disabled ? '<span style="color:var(--error); font-size: 0.7rem;">(Desativado)</span>' : ''}
+                </div>
+            </div>
+            <div class="actions">
+                <button class="btn btn-secondary btn-sm" onclick="editUser('${u.username}', '${u.role}')">Editar</button>
+                ${u.username !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.username}')">Excluir</button>` : ''}
+            </div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+const userForm = document.getElementById('user-form');
+if (userForm) {
+    userForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('user-username').value;
+        const password = document.getElementById('user-password').value;
+        const role = document.getElementById('user-role').value;
+        const isEdit = document.getElementById('edit-user-mode').value === 'true';
+
+        try {
+            const method = isEdit ? 'PUT' : 'POST';
+            const url = isEdit ? `${API_BASE}/users/${username}` : `${API_BASE}/users`;
+
+            const res = await authFetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, role })
+            });
+
+            if (res.ok) {
+                showToast(isEdit ? "Usuário atualizado!" : "Usuário criado!");
+                resetUserForm();
+                loadUsers();
+            } else {
+                const err = await res.json();
+                alert(err.detail || "Erro ao salvar usuário");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Erro na conexão");
+        }
+    });
+}
+
+function editUser(username, role) {
+    document.getElementById('user-username').value = username;
+    document.getElementById('user-username').disabled = true;
+    document.getElementById('user-password').placeholder = "Nova senha (obrigatorio)";
+    document.getElementById('user-role').value = role;
+    document.getElementById('edit-user-mode').value = "true";
+    document.getElementById('user-form-title').innerText = "Editar Usuário: " + username;
+    document.getElementById('btn-save-user').querySelector('span').innerText = "Atualizar Usuário";
+    document.getElementById('cancel-user-edit').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetUserForm() {
+    userForm.reset();
+    document.getElementById('user-username').disabled = false;
+    document.getElementById('user-password').placeholder = "Defina uma senha";
+    document.getElementById('edit-user-mode').value = "false";
+    document.getElementById('user-form-title').innerText = "Adicionar Novo Usuário";
+    document.getElementById('btn-save-user').querySelector('span').innerText = "Salvar Usuário";
+    document.getElementById('cancel-user-edit').classList.add('hidden');
+}
+
+document.getElementById('cancel-user-edit')?.addEventListener('click', resetUserForm);
+
+async function deleteUser(username) {
+    if (!confirm(`Tem certeza que deseja excluir o usuário ${username}?`)) return;
+    try {
+        const res = await authFetch(`${API_BASE}/users/${username}`, { method: 'DELETE' });
+        if (res.ok) {
+            showToast("Usuário excluído!");
+            loadUsers();
+        }
+    } catch (err) {
+        console.error(err);
+    }
 }

@@ -73,3 +73,23 @@ class Link(BaseModel):
     created_by: str
     created_at: datetime
     status: str = "active"
+
+class User(BaseModel):
+    username: str
+    role: str = "user" # admin, user, viewer
+    disabled: Optional[bool] = False
+
+class UserCreate(User):
+    password: str
+
+class UserInDB(User):
+    hashed_password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    role: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+    role: Optional[str] = None

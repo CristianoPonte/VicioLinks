@@ -10,8 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>">
+    <link rel="icon" href="assets/icon.png">
 </head>
 
 <body>
@@ -21,508 +20,595 @@
         <div class="blob blob-3"></div>
     </div>
 
-    <nav class="glass-nav">
-        <div class="container">
-            <div class="logo">
-                <span class="logo-icon">🔗</span>
-                <span class="logo-text">Vício<span class="accent">Links</span></span>
+    <!-- Login Screen Overlay -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="glass-card login-card" style="padding: 1rem 2rem 1.5rem !important; max-width: 360px;">
+            <div class="logo" style="justify-content: center; margin-bottom: 0.5rem; overflow: hidden; height: 110px;">
+                <img src="assets/logo.png" alt="Vício Logo"
+                    style="height: 335px; margin-top: 5px; filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.4)); object-fit: contain;">
             </div>
-            <ul class="nav-links">
-                <li><a href="#" class="active" id="nav-generate">Gerar Link</a></li>
-                <li><a href="#" id="nav-list">Repositório</a></li>
-                <li><a href="#" id="nav-admin">Admin</a></li>
-            </ul>
-            <div class="user-profile">
-                <span id="user-name">Usuário</span>
-                <div class="avatar"></div>
-            </div>
+            <h2 style="text-align: center; margin-bottom: 0.2rem; font-size: 1.35rem;">Bem-vindo</h2>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 1rem; font-size: 0.75rem;">Entre para
+                acessar o VícioLinks</p>
+
+            <form id="login-form" class="login-form-fields">
+                <div class="form-group">
+                    <label for="login-username">Usuário</label>
+                    <input type="text" id="login-username" placeholder="Seu usuário" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Senha</label>
+                    <input type="password" id="login-password" placeholder="Sua senha" required>
+                </div>
+                <button type="submit" class="btn btn-primary"
+                    style="width: 100%; margin-top: 1rem; justify-content: center;">
+                    <span>Entrar no Sistema</span>
+                </button>
+            </form>
         </div>
-    </nav>
+    </div>
 
-    <main class="container">
-        <!-- Gerar Link Screen -->
-        <section id="screen-generate" class="screen">
-            <div class="screen-header">
-                <h1>Gerar Novo Link</h1>
-                <p>UTMs personalizadas e padronizadas para Captação e Vendas.</p>
-            </div>
-
-            <div class="mode-toggle-container">
-                <div class="mode-toggle">
-                    <button class="mode-btn active" data-mode="captacao">Captação</button>
-                    <button class="mode-btn" data-mode="vendas">Vendas</button>
+    <!-- Main App Container (Hidden until Login) -->
+    <div id="app-container" class="hidden">
+        <nav class="glass-nav">
+            <div class="container">
+                <div class="logo">
+                    <img src="assets/icon.png" alt="Vício Icon" class="logo-img">
+                    <span class="logo-text">Vício<span class="accent">Links</span></span>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#" class="active" id="nav-generate">Gerar Link</a></li>
+                    <li><a href="#" id="nav-list">Repositório</a></li>
+                    <li><a href="#" id="nav-admin">Admin</a></li>
+                </ul>
+                <div class="user-profile">
+                    <button id="nav-users" class="btn-icon-sm hidden" title="Gerenciar Usuários">👤</button>
+                    <span id="user-name">Usuário</span>
+                    <div class="avatar"></div>
                 </div>
             </div>
+        </nav>
 
-            <div class="glass-card form-container">
-                <form id="link-form">
-                    <div class="form-grid">
-                        <div class="form-group full-width">
-                            <label for="base_url">URL de Destino</label>
-                            <input type="url" id="base_url" placeholder="https://lp.dominio.com" required>
-                        </div>
+        <main class="container">
+            <!-- Gerar Link Screen -->
+            <section id="screen-generate" class="screen">
+                <div class="screen-header">
+                    <h1>Gerar Novo Link</h1>
+                    <p>UTMs personalizadas e padronizadas para Captação e Vendas.</p>
+                </div>
 
-                        <div class="form-group">
-                            <label for="campaign-select">Campaign (utm_campaign)</label>
-                            <select id="campaign-select" required>
-                                <option value="" disabled selected>Selecionar Campaign</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="channel">Source (utm_source)</label>
-                            <select id="channel" required>
-                                <option value="" disabled selected>Selecionar Source</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="subtype">Medium (utm_medium)</label>
-                            <select id="subtype" required>
-                                <option value="" disabled selected>Selecionar Medium</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="content-select">Content (utm_content)</label>
-                            <select id="content-select" required>
-                                <option value="" disabled selected>Selecionar Content</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group full-width" id="dynamic-fields-container">
-                            <!-- Dynamic fields -->
-                        </div>
-
-                        <div class="form-group">
-                            <label for="utm_term">Detalhe Opcional (utm_term)</label>
-                            <input type="text" id="utm_term" placeholder="ex: botao_topo">
-                        </div>
-
-                        <div class="form-group full-width">
-                            <label for="notes">Notas Internas</label>
-                            <input type="text" id="notes" placeholder="Para que serve este link?">
-                        </div>
+                <div class="mode-toggle-container">
+                    <div class="mode-toggle">
+                        <button class="mode-btn active" data-mode="captacao">Captação</button>
+                        <button class="mode-btn" data-mode="vendas">Vendas</button>
                     </div>
+                </div>
 
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" id="btn-generate">
-                            <span>Gerar Link de Captação</span>
+                <div class="glass-card form-container">
+                    <form id="link-form">
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label for="base_url">URL de Destino</label>
+                                <input type="url" id="base_url" placeholder="https://lp.dominio.com" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="campaign-select">Campaign (utm_campaign)</label>
+                                <select id="campaign-select" required>
+                                    <option value="" disabled selected>Selecionar Campaign</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="channel">Source (utm_source)</label>
+                                <select id="channel" required>
+                                    <option value="" disabled selected>Selecionar Source</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="subtype">Medium (utm_medium)</label>
+                                <select id="subtype" required>
+                                    <option value="" disabled selected>Selecionar Medium</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="content-select">Content (utm_content)</label>
+                                <select id="content-select" required>
+                                    <option value="" disabled selected>Selecionar Content</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group full-width" id="dynamic-fields-container">
+                                <!-- Dynamic fields -->
+                            </div>
+
+                            <div class="form-group">
+                                <label for="utm_term">Detalhe Opcional (utm_term)</label>
+                                <input type="text" id="utm_term" placeholder="ex: botao_topo">
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="notes">Notas Internas</label>
+                                <input type="text" id="notes" placeholder="Para que serve este link?">
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="btn-generate">
+                                <span>Gerar Link de Captação</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="result-container" class="glass-card result-card hidden">
+                    <h3>Resultado Gerado</h3>
+                    <div class="result-url-wrapper">
+                        <code id="final-url"></code>
+                        <button class="btn btn-copy" id="btn-copy">Copiar</button>
+                    </div>
+                    <div class="utm-details">
+                        <div class="utm-tag">ID: <span id="res-id"></span></div>
+                        <div class="utm-tag">Source: <span id="res-source"></span></div>
+                        <div class="utm-tag">Medium: <span id="res-medium"></span></div>
+                        <div class="utm-tag">Campaign: <span id="res-campaign"></span></div>
+                        <div class="utm-tag">Content: <span id="res-content"></span></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Repositório Screen -->
+            <section id="screen-list" class="screen hidden">
+                <div class="screen-header">
+                    <div class="header-content">
+                        <h1>Repositório de Links</h1>
+                        <p>Pesquise e audite todos os seus links gerados.</p>
+                    </div>
+                </div>
+
+                <div class="filters-bar glass-card">
+                    <div class="filter-group main-search">
+                        <label>Busca Rápida</label>
+                        <input type="text" id="search-links" placeholder="Buscar por ID ou URL...">
+                    </div>
+                    <div class="filter-group">
+                        <label>Campaign</label>
+                        <select id="filter-campaign">
+                            <option value="">Todas as Campaigns</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Source</label>
+                        <select id="filter-source">
+                            <option value="">Todas as Sources</option>
+                        </select>
+                    </div>
+                    <div class="filter-actions">
+                        <button class="btn btn-secondary btn-sm" id="btn-export">
+                            <span>Exportar CSV</span>
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="btn-toggle-advanced">
+                            <span>Filtros Avançados</span>
                         </button>
                     </div>
-                </form>
-            </div>
-
-            <div id="result-container" class="glass-card result-card hidden">
-                <h3>Resultado Gerado</h3>
-                <div class="result-url-wrapper">
-                    <code id="final-url"></code>
-                    <button class="btn btn-copy" id="btn-copy">Copiar</button>
                 </div>
-                <div class="utm-details">
-                    <div class="utm-tag">ID: <span id="res-id"></span></div>
-                    <div class="utm-tag">Source: <span id="res-source"></span></div>
-                    <div class="utm-tag">Medium: <span id="res-medium"></span></div>
-                    <div class="utm-tag">Campaign: <span id="res-campaign"></span></div>
-                    <div class="utm-tag">Content: <span id="res-content"></span></div>
-                </div>
-            </div>
-        </section>
 
-        <!-- Repositório Screen -->
-        <section id="screen-list" class="screen hidden">
-            <div class="screen-header">
-                <div class="header-content">
-                    <h1>Repositório de Links</h1>
-                    <p>Pesquise e audite todos os seus links gerados.</p>
-                </div>
-            </div>
-
-            <div class="filters-bar glass-card">
-                <div class="filter-group main-search">
-                    <label>Busca Rápida</label>
-                    <input type="text" id="search-links" placeholder="Buscar por ID ou URL...">
-                </div>
-                <div class="filter-group">
-                    <label>Campaign</label>
-                    <select id="filter-campaign">
-                        <option value="">Todas as Campaigns</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Source</label>
-                    <select id="filter-source">
-                        <option value="">Todas as Sources</option>
-                    </select>
-                </div>
-                <div class="filter-actions">
-                    <button class="btn btn-secondary btn-sm" id="btn-export">
-                        <span>Exportar CSV</span>
-                    </button>
-                    <button class="btn btn-secondary btn-sm" id="btn-toggle-advanced">
-                        <span>Filtros Avançados</span>
-                    </button>
-                </div>
-            </div>
-
-            <div id="advanced-filters" class="glass-card hidden" style="margin-top: 1rem; padding: 2rem;">
-                <div class="form-grid">
-                    <div class="filter-group">
-                        <label>Medium</label>
-                        <select id="filter-medium">
-                            <option value="">Todos os Mediums</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Content</label>
-                        <select id="filter-content">
-                            <option value="">Todos os Contents</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Termo</label>
-                        <input type="text" id="filter-term" placeholder="Filtrar por utm_term...">
-                    </div>
-                </div>
-            </div>
-
-            <div class="table-container glass-card">
-                <table id="links-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 100px;">ID</th>
-                            <th>Campaign</th>
-                            <th>Source</th>
-                            <th>Medium</th>
-                            <th>Content</th>
-                            <th>Detalhe (Term)</th>
-                            <th>Data (Term)</th>
-                            <th class="actions-col" style="width: 150px;">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="links-tbody">
-                        <!-- Loaded dynamically -->
-                    </tbody>
-                </table>
-                <div id="empty-state" class="hidden">
-                    <p style="text-align: center; padding: 4rem; color: var(--text-muted);">Nenhum link encontrado com
-                        os filtros atuais.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Admin Screen -->
-        <section id="screen-admin" class="screen hidden">
-            <div class="screen-header">
-                <h1>Admin de Governança</h1>
-                <p>Gerencie produtos, turmas, canais e regras de UTM.</p>
-            </div>
-
-            <div class="mode-toggle-container">
-                <div class="mode-toggle admin-tabs">
-                    <button class="mode-btn active" data-admin-tab="campaign">Campaigns</button>
-                    <button class="mode-btn" data-admin-tab="sources">Sources</button>
-                    <button class="mode-btn" data-admin-tab="mediums">Mediums</button>
-                    <button class="mode-btn" data-admin-tab="contents">Contents</button>
-                </div>
-            </div>
-
-            <div id="admin-tab-campaign" class="admin-tab-content">
-                <div class="admin-grid">
-                    <!-- Gerador de Campanhas -->
-                    <div class="glass-card full-width" style="margin-bottom: 3rem;">
-                        <h3 style="margin-bottom: 2rem;">Campaign Slug Generator</h3>
-                        <div class="campaign-generator-block" style="margin-bottom: 0;">
-                            <div class="generator-grid"
-                                style="grid-template-columns: repeat(4, 1fr); align-items: flex-end; gap: 1.5rem;">
-                                <!-- Row 1 -->
-                                <div class="form-group" style="grid-column: span 2;">
-                                    <label for="gen-campaign-name">Campaign Name (Nome Amigável)</label>
-                                    <input type="text" id="gen-campaign-name" placeholder="Ex: VDE ENAM 2026.1"
-                                        required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="gen-product">Produto</label>
-                                    <select id="gen-product">
-                                        <option value="" disabled selected>Selecione o produto</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="gen-turma">Turma</label>
-                                    <select id="gen-turma">
-                                        <option value="" disabled selected>Selecione a turma</option>
-                                    </select>
-                                </div>
-
-                                <!-- Row 2 -->
-                                <div class="form-group">
-                                    <label for="gen-type">Tipo de Lançamento</label>
-                                    <select id="gen-type">
-                                        <option value="" disabled selected>Selecione o tipo</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <div style="display: flex; gap: 0.5rem;">
-                                        <div style="flex: 1;">
-                                            <label for="gen-month">Mês</label>
-                                            <select id="gen-month" style="padding: 0 0.5rem;">
-                                                <option value="01">01</option>
-                                                <option value="02">02</option>
-                                                <option value="03">03</option>
-                                                <option value="04">04</option>
-                                                <option value="05">05</option>
-                                                <option value="06">06</option>
-                                                <option value="07">07</option>
-                                                <option value="08">08</option>
-                                                <option value="09">09</option>
-                                                <option value="10">10</option>
-                                                <option value="11">11</option>
-                                                <option value="12">12</option>
-                                            </select>
-                                        </div>
-                                        <div style="flex: 1;">
-                                            <label for="gen-year">Ano</label>
-                                            <select id="gen-year" style="padding: 0 0.5rem;">
-                                                <option value="2024">2024</option>
-                                                <option value="2025">2025</option>
-                                                <option value="2026">2026</option>
-                                                <option value="2027">2027</option>
-                                                <option value="2028">2028</option>
-                                                <option value="2029">2029</option>
-                                                <option value="2030">2030</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-actions"
-                                    style="grid-column: span 2; margin-top: 0; justify-content: flex-end;">
-                                    <button id="btn-save-campaign" class="btn btn-primary">
-                                        <span>Salvar Campaign</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Slug Preview - Highlighted Below -->
-                            <div class="campaign-preview"
-                                style="margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border);">
-                                <label style="display: block; text-align: center; margin-bottom: 1rem;">Slug UTM Gerado
-                                    (Sistema)</label>
-                                <div class="preview-box"
-                                    style="text-align: center; padding: 1.5rem; border-style: dashed; border-width: 1.5px;">
-                                    <code id="campaign-preview-text"
-                                        style="font-size: 1.5rem; color: var(--success); letter-spacing: 0.05em;">...</code>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Gestão de Produtos -->
-                    <div class="glass-card">
-                        <h3 style="margin-bottom: 1.5rem;">Produtos</h3>
-                        <form id="admin-product-form" class="admin-form" style="margin-bottom: 2.5rem;">
-                            <div class="form-grid" style="margin-bottom: 2rem;">
-                                <div class="form-group">
-                                    <label>Slug (ex: vde1f)</label>
-                                    <input type="text" id="admin-product-slug" placeholder="vde1f" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Nome do Produto</label>
-                                    <input type="text" id="admin-product-name" placeholder="Nome do Produto" required>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary"><span>Adicionar Produto</span></button>
-                            </div>
-                        </form>
-                        <div class="admin-list" id="admin-products-list"></div>
-                    </div>
-
-                    <!-- Gestão de Turmas -->
-                    <div class="glass-card">
-                        <h3 style="margin-bottom: 1.5rem;">Turmas</h3>
-                        <form id="admin-turma-form" class="admin-form" style="margin-bottom: 2.5rem;">
-                            <div class="form-grid" style="margin-bottom: 2rem;">
-                                <div class="form-group">
-                                    <label>Slug (ex: 120d)</label>
-                                    <input type="text" id="admin-turma-slug" placeholder="120d" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Nome da Turma</label>
-                                    <input type="text" id="admin-turma-name" placeholder="Nome da Turma" required>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary"><span>Adicionar Turma</span></button>
-                            </div>
-                        </form>
-                        <div class="admin-list" id="admin-turmas-list"></div>
-                    </div>
-
-                    <!-- Gestão de Tipos de Lançamento -->
-                    <div class="glass-card">
-                        <h3 style="margin-bottom: 1.5rem;">Tipos de Lançamento</h3>
-                        <form id="admin-launchtype-form" class="admin-form" style="margin-bottom: 2.5rem;">
-                            <div class="form-grid" style="margin-bottom: 2rem;">
-                                <div class="form-group">
-                                    <label>Slug (ex: evento)</label>
-                                    <input type="text" id="admin-launchtype-slug" placeholder="evento" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Nome do Tipo</label>
-                                    <input type="text" id="admin-launchtype-name" placeholder="Nome do Tipo" required>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary"><span>Adicionar Tipo</span></button>
-                            </div>
-                        </form>
-                        <div class="admin-list" id="admin-launchtypes-list"></div>
-                    </div>
-
-                    <!-- Campanhas Ativas -->
-                    <div class="glass-card full-width">
-                        <h3 style="margin-bottom: 2rem;">Active Campaigns</h3>
-                        <div class="admin-list" id="admin-launches-list"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab: Sources -->
-            <div id="admin-tab-sources" class="admin-tab-content hidden">
-                <div class="admin-grid">
-                    <div class="glass-card full-width">
-                        <h3 style="margin-bottom: 1.5rem;">Source Governance</h3>
-                        <form id="admin-source-form-new" class="admin-form">
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label>Slug (ex: meta)</label>
-                                    <input type="text" id="source-new-slug" placeholder="meta" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Name (ex: Meta Ads)</label>
-                                    <input type="text" id="source-new-name" placeholder="Meta" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Term Config</label>
-                                    <select id="source-new-term">
-                                        <option value="standard">Padrão (Texto + Data)</option>
-                                        <option value="no_date">Sem Data (Site/Link Estático)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary"><span>Adicionar Source</span></button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="glass-card full-width">
-                        <h3 style="margin-bottom: 1.5rem;">Active Sources</h3>
-                        <div class="admin-list" id="admin-sources-list"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab: Mediums -->
-            <div id="admin-tab-mediums" class="admin-tab-content hidden">
-                <div class="admin-grid">
-                    <div class="glass-card full-width">
-                        <h3 style="margin-bottom: 1.5rem;">Medium Governance</h3>
-
-                        <div class="form-group" style="margin-bottom: 3rem;">
-                            <label>Selecione a Source</label>
-                            <select id="admin-medium-source-filter">
-                                <option value="" disabled selected>Select Source</option>
+                <div id="advanced-filters" class="glass-card hidden" style="margin-top: 1rem; padding: 2rem;">
+                    <div class="form-grid">
+                        <div class="filter-group">
+                            <label>Medium</label>
+                            <select id="filter-medium">
+                                <option value="">Todos os Mediums</option>
                             </select>
                         </div>
-
-                        <div id="medium-management-area" class="hidden">
-                            <form id="admin-medium-form-new" class="admin-form">
-                                <div class="form-grid">
-                                    <div class="form-group">
-                                        <label>Medium Slug (ex: stories)</label>
-                                        <input type="text" id="medium-new-slug" placeholder="stories" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Medium Name (ex: Stories)</label>
-                                        <input type="text" id="medium-new-name" placeholder="Stories" required>
-                                    </div>
-                                </div>
-                                <div class="form-actions">
-                                    <button type="submit" class="btn btn-primary"><span>Adicionar Medium</span></button>
-                                </div>
-                            </form>
+                        <div class="filter-group">
+                            <label>Content</label>
+                            <select id="filter-content">
+                                <option value="">Todos os Contents</option>
+                            </select>
                         </div>
-
-                        <div id="medium-empty-state" class="preview-box"
-                            style="text-align: center; color: var(--text-muted);">
-                            Selecione uma Source para gerenciar Mediums.
+                        <div class="filter-group">
+                            <label>Termo</label>
+                            <input type="text" id="filter-term" placeholder="Filtrar por utm_term...">
                         </div>
-                    </div>
-
-                    <div id="medium-list-card" class="glass-card full-width hidden">
-                        <h3 style="margin-bottom: 1.5rem;">Mediums for <span id="current-source-label"
-                                class="accent">...</span></h3>
-                        <div class="admin-list" id="admin-mediums-list"></div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Tab: Contents -->
-            <div id="admin-tab-contents" class="admin-tab-content hidden">
-                <div class="admin-grid">
-                    <div class="glass-card full-width">
-                        <h3 style="margin-bottom: 1.5rem;">Content Governance</h3>
+                <div class="table-container glass-card">
+                    <table id="links-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 100px;">ID</th>
+                                <th>Campaign</th>
+                                <th>Source</th>
+                                <th>Medium</th>
+                                <th>Content</th>
+                                <th>Detalhe (Term)</th>
+                                <th>Data (Term)</th>
+                                <th class="actions-col" style="width: 150px;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="links-tbody">
+                            <!-- Loaded dynamically -->
+                        </tbody>
+                    </table>
+                    <div id="empty-state" class="hidden">
+                        <p style="text-align: center; padding: 4rem; color: var(--text-muted);">Nenhum link encontrado
+                            com
+                            os filtros atuais.</p>
+                    </div>
+                </div>
+            </section>
 
-                        <div class="form-grid" style="margin-bottom: 3rem;">
-                            <div class="form-group">
-                                <label>Selecione a Source</label>
-                                <select id="admin-content-source-filter">
-                                    <option value="" disabled selected>Select Source</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Selecione o Medium</label>
-                                <select id="admin-content-medium-filter" disabled>
-                                    <option value="" disabled selected>Select Medium</option>
-                                </select>
+            <!-- Admin Screen -->
+            <section id="screen-admin" class="screen hidden">
+                <div class="screen-header">
+                    <h1>Admin de Governança</h1>
+                    <p>Gerencie produtos, turmas, canais e regras de UTM.</p>
+                </div>
+
+                <div class="mode-toggle-container">
+                    <div class="mode-toggle admin-tabs">
+                        <button class="mode-btn active" data-admin-tab="campaign">Campaigns</button>
+                        <button class="mode-btn" data-admin-tab="sources">Sources</button>
+                        <button class="mode-btn" data-admin-tab="mediums">Mediums</button>
+                        <button class="mode-btn" data-admin-tab="contents">Contents</button>
+                    </div>
+                </div>
+
+                <div id="admin-tab-campaign" class="admin-tab-content">
+                    <div class="admin-grid">
+                        <!-- Gerador de Campanhas -->
+                        <div class="glass-card full-width" style="margin-bottom: 3rem;">
+                            <h3 style="margin-bottom: 2rem;">Campaign Slug Generator</h3>
+                            <div class="campaign-generator-block" style="margin-bottom: 0;">
+                                <div class="generator-grid"
+                                    style="grid-template-columns: repeat(4, 1fr); align-items: flex-end; gap: 1.5rem;">
+                                    <!-- Row 1 -->
+                                    <div class="form-group" style="grid-column: span 2;">
+                                        <label for="gen-campaign-name">Campaign Name (Nome Amigável)</label>
+                                        <input type="text" id="gen-campaign-name" placeholder="Ex: VDE ENAM 2026.1"
+                                            required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="gen-product">Produto</label>
+                                        <select id="gen-product">
+                                            <option value="" disabled selected>Selecione o produto</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="gen-turma">Turma</label>
+                                        <select id="gen-turma">
+                                            <option value="" disabled selected>Selecione a turma</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Row 2 -->
+                                    <div class="form-group">
+                                        <label for="gen-type">Tipo de Lançamento</label>
+                                        <select id="gen-type">
+                                            <option value="" disabled selected>Selecione o tipo</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <div style="flex: 1;">
+                                                <label for="gen-month">Mês</label>
+                                                <select id="gen-month" style="padding: 0 0.5rem;">
+                                                    <option value="01">01</option>
+                                                    <option value="02">02</option>
+                                                    <option value="03">03</option>
+                                                    <option value="04">04</option>
+                                                    <option value="05">05</option>
+                                                    <option value="06">06</option>
+                                                    <option value="07">07</option>
+                                                    <option value="08">08</option>
+                                                    <option value="09">09</option>
+                                                    <option value="10">10</option>
+                                                    <option value="11">11</option>
+                                                    <option value="12">12</option>
+                                                </select>
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <label for="gen-year">Ano</label>
+                                                <select id="gen-year" style="padding: 0 0.5rem;">
+                                                    <option value="2024">2024</option>
+                                                    <option value="2025">2025</option>
+                                                    <option value="2026">2026</option>
+                                                    <option value="2027">2027</option>
+                                                    <option value="2028">2028</option>
+                                                    <option value="2029">2029</option>
+                                                    <option value="2030">2030</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions"
+                                        style="grid-column: span 2; margin-top: 0; justify-content: flex-end;">
+                                        <button id="btn-save-campaign" class="btn btn-primary">
+                                            <span>Salvar Campaign</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Slug Preview - Highlighted Below -->
+                                <div class="campaign-preview"
+                                    style="margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+                                    <label style="display: block; text-align: center; margin-bottom: 1rem;">Slug UTM
+                                        Gerado
+                                        (Sistema)</label>
+                                    <div class="preview-box"
+                                        style="text-align: center; padding: 1.5rem; border-style: dashed; border-width: 1.5px;">
+                                        <code id="campaign-preview-text"
+                                            style="font-size: 1.5rem; color: var(--success); letter-spacing: 0.05em;">...</code>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div id="content-management-area" class="hidden">
-                            <form id="admin-content-form-new" class="admin-form">
-                                <div class="form-grid">
+                        <!-- Gestão de Produtos -->
+                        <div class="glass-card">
+                            <h3 style="margin-bottom: 1.5rem;">Produtos</h3>
+                            <form id="admin-product-form" class="admin-form" style="margin-bottom: 2.5rem;">
+                                <div class="form-grid" style="margin-bottom: 2rem;">
                                     <div class="form-group">
-                                        <label>Content Value (ex: bio)</label>
-                                        <input type="text" id="content-new-value" placeholder="ex: bio" required>
+                                        <label>Slug (ex: vde1f)</label>
+                                        <input type="text" id="admin-product-slug" placeholder="vde1f" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Nome do Produto</label>
+                                        <input type="text" id="admin-product-name" placeholder="Nome do Produto"
+                                            required>
                                     </div>
                                 </div>
                                 <div class="form-actions">
                                     <button type="submit" class="btn btn-primary"><span>Adicionar
-                                            Content</span></button>
+                                            Produto</span></button>
+                                </div>
+                            </form>
+                            <div class="admin-list" id="admin-products-list"></div>
+                        </div>
+
+                        <!-- Gestão de Turmas -->
+                        <div class="glass-card">
+                            <h3 style="margin-bottom: 1.5rem;">Turmas</h3>
+                            <form id="admin-turma-form" class="admin-form" style="margin-bottom: 2.5rem;">
+                                <div class="form-grid" style="margin-bottom: 2rem;">
+                                    <div class="form-group">
+                                        <label>Slug (ex: 120d)</label>
+                                        <input type="text" id="admin-turma-slug" placeholder="120d" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Nome da Turma</label>
+                                        <input type="text" id="admin-turma-name" placeholder="Nome da Turma" required>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary"><span>Adicionar Turma</span></button>
+                                </div>
+                            </form>
+                            <div class="admin-list" id="admin-turmas-list"></div>
+                        </div>
+
+                        <!-- Gestão de Tipos de Lançamento -->
+                        <div class="glass-card">
+                            <h3 style="margin-bottom: 1.5rem;">Tipos de Lançamento</h3>
+                            <form id="admin-launchtype-form" class="admin-form" style="margin-bottom: 2.5rem;">
+                                <div class="form-grid" style="margin-bottom: 2rem;">
+                                    <div class="form-group">
+                                        <label>Slug (ex: evento)</label>
+                                        <input type="text" id="admin-launchtype-slug" placeholder="evento" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Nome do Tipo</label>
+                                        <input type="text" id="admin-launchtype-name" placeholder="Nome do Tipo"
+                                            required>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary"><span>Adicionar Tipo</span></button>
+                                </div>
+                            </form>
+                            <div class="admin-list" id="admin-launchtypes-list"></div>
+                        </div>
+
+                        <!-- Campanhas Ativas -->
+                        <div class="glass-card full-width">
+                            <h3 style="margin-bottom: 2rem;">Active Campaigns</h3>
+                            <div class="admin-list" id="admin-launches-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Sources -->
+                <div id="admin-tab-sources" class="admin-tab-content hidden">
+                    <div class="admin-grid">
+                        <div class="glass-card full-width">
+                            <h3 style="margin-bottom: 1.5rem;">Source Governance</h3>
+                            <form id="admin-source-form-new" class="admin-form">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Slug (ex: meta)</label>
+                                        <input type="text" id="source-new-slug" placeholder="meta" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Name (ex: Meta Ads)</label>
+                                        <input type="text" id="source-new-name" placeholder="Meta" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Term Config</label>
+                                        <select id="source-new-term">
+                                            <option value="standard">Padrão (Texto + Data)</option>
+                                            <option value="no_date">Sem Data (Site/Link Estático)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary"><span>Adicionar Source</span></button>
                                 </div>
                             </form>
                         </div>
 
-                        <div id="content-empty-state" class="preview-box"
-                            style="text-align: center; color: var(--text-muted);">
-                            Selecione Source e Medium para gerenciar Contents.
+                        <div class="glass-card full-width">
+                            <h3 style="margin-bottom: 1.5rem;">Active Sources</h3>
+                            <div class="admin-list" id="admin-sources-list"></div>
                         </div>
                     </div>
+                </div>
 
-                    <div id="content-list-card" class="glass-card full-width hidden">
-                        <h3 style="margin-bottom: 1.5rem;">Contents for <span id="current-medium-label"
-                                class="accent">...</span></h3>
-                        <div class="admin-list" id="admin-contents-list"></div>
+                <!-- Tab: Mediums -->
+                <div id="admin-tab-mediums" class="admin-tab-content hidden">
+                    <div class="admin-grid">
+                        <div class="glass-card full-width">
+                            <h3 style="margin-bottom: 1.5rem;">Medium Governance</h3>
+
+                            <div class="form-group" style="margin-bottom: 3rem;">
+                                <label>Selecione a Source</label>
+                                <select id="admin-medium-source-filter">
+                                    <option value="" disabled selected>Select Source</option>
+                                </select>
+                            </div>
+
+                            <div id="medium-management-area" class="hidden">
+                                <form id="admin-medium-form-new" class="admin-form">
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label>Medium Slug (ex: stories)</label>
+                                            <input type="text" id="medium-new-slug" placeholder="stories" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Medium Name (ex: Stories)</label>
+                                            <input type="text" id="medium-new-name" placeholder="Stories" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-primary"><span>Adicionar
+                                                Medium</span></button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div id="medium-empty-state" class="preview-box"
+                                style="text-align: center; color: var(--text-muted);">
+                                Selecione uma Source para gerenciar Mediums.
+                            </div>
+                        </div>
+
+                        <div id="medium-list-card" class="glass-card full-width hidden">
+                            <h3 style="margin-bottom: 1.5rem;">Mediums for <span id="current-source-label"
+                                    class="accent">...</span></h3>
+                            <div class="admin-list" id="admin-mediums-list"></div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
-    </main>
+
+                <!-- Tab: Contents -->
+                <div id="admin-tab-contents" class="admin-tab-content hidden">
+                    <div class="admin-grid">
+                        <div class="glass-card full-width">
+                            <h3 style="margin-bottom: 1.5rem;">Content Governance</h3>
+
+                            <div class="form-grid" style="margin-bottom: 3rem;">
+                                <div class="form-group">
+                                    <label>Selecione a Source</label>
+                                    <select id="admin-content-source-filter">
+                                        <option value="" disabled selected>Select Source</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Selecione o Medium</label>
+                                    <select id="admin-content-medium-filter" disabled>
+                                        <option value="" disabled selected>Select Medium</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="content-management-area" class="hidden">
+                                <form id="admin-content-form-new" class="admin-form">
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label>Content Value (ex: bio)</label>
+                                            <input type="text" id="content-new-value" placeholder="ex: bio" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-primary"><span>Adicionar
+                                                Content</span></button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div id="content-empty-state" class="preview-box"
+                                style="text-align: center; color: var(--text-muted);">
+                                Selecione Source e Medium para gerenciar Contents.
+                            </div>
+                        </div>
+
+                        <div id="content-list-card" class="glass-card full-width hidden">
+                            <h3 style="margin-bottom: 1.5rem;">Contents for <span id="current-medium-label"
+                                    class="accent">...</span></h3>
+                            <div class="admin-list" id="admin-contents-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- User Management Screen -->
+            <section id="screen-users" class="screen hidden">
+                <div class="screen-header">
+                    <h1>Gerenciar Usuários</h1>
+                    <p>Crie, edite ou remova acessos à plataforma.</p>
+                </div>
+
+                <div class="users-layout-grid">
+                    <div class="glass-card user-form-container">
+                        <h3 style="margin-bottom: 1.5rem;" id="user-form-title">Adicionar Novo Usuário</h3>
+                        <form id="user-form" class="admin-form">
+                            <input type="hidden" id="edit-user-mode" value="false">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Nome de Usuário</label>
+                                    <input type="text" id="user-username" placeholder="ex: joao_link" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Senha</label>
+                                    <input type="password" id="user-password" placeholder="Defina uma senha" required>
+                                </div>
+                                <div class="form-group full-width">
+                                    <label>Nível de Permissão</label>
+                                    <select id="user-role" required>
+                                        <option value="user">Editor (Gera links)</option>
+                                        <option value="viewer">Viewer (Apenas vê)</option>
+                                        <option value="admin">Admin (Controle total)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" id="cancel-user-edit"
+                                    class="btn btn-secondary hidden">Cancelar</button>
+                                <button type="submit" class="btn btn-primary" id="btn-save-user"><span>Salvar
+                                        Usuário</span></button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="glass-card user-list-container">
+                        <h3 style="margin-bottom: 1.5rem;">Usuários Cadastrados</h3>
+                        <div class="admin-list" id="users-list">
+                            <!-- Users will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div> <!-- Close app-container -->
 
     <div id="toast" class="toast hidden">Copiado para a área de transferência!</div>
 
     <script src="app.js"></script>
 </body>
+
+</html>
 
 </html>

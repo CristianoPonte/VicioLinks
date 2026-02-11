@@ -65,7 +65,7 @@ class LocalDocument:
     def get(self):
         data = self.collection._get_collection_data()
         doc = data.get(self.doc_id)
-        return LocalDocSnapshot(doc) if doc else None
+        return LocalDocSnapshot(doc)
 
     def delete(self):
         all_data = self.collection.storage._read()
@@ -76,6 +76,11 @@ class LocalDocument:
 class LocalDocSnapshot:
     def __init__(self, data):
         self._data = data
+    
+    @property
+    def exists(self):
+        return self._data is not None
+
     def to_dict(self):
         return self._data
 

@@ -1,14 +1,16 @@
-from fastapi import FastAPI, HTTPException, Depends, Query
+from fastapi import FastAPI, HTTPException, Depends, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 import os
 
-from .models import Link, LinkCreate, Launch, SourceConfig, Product, Turma, LaunchType
+from .models import Link, LinkCreate, Launch, SourceConfig, Product, Turma, LaunchType, Token, User, UserInDB, UserCreate
 from .utils import normalize_utm, build_full_url, generate_utm_id, slugger
 from .database import get_db
+from .auth import authenticate_user, create_access_token, get_current_active_user, require_admin, require_editor, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash
+from fastapi.security import OAuth2PasswordRequestForm
 
 app = FastAPI(title="Link Hub API")
 
@@ -70,32 +72,114 @@ async def startup_event():
         db.collection("launch_types").document("passariano").set({"slug": "passariano", "nome": "Passariano"})
         db.collection("launch_types").document("evento").set({"slug": "evento", "nome": "Evento"})
 
+    if is_empty("users"):
+        print("Seeding users...")
+        users = [
+            {"username": "admin", "password": "admin123", "role": "admin"},
+            {"username": "user", "password": "user123", "role": "user"},
+            {"username": "viewer", "password": "viewer123", "role": "viewer"}
+        ]
+        for u in users:
+            hashed_pw = get_password_hash(u["password"])
+            user_in_db = UserInDB(username=u["username"], role=u["role"], hashed_password=hashed_pw)
+            # Store using dict() to serialize properly
+            db.collection("users").document(u["username"]).set(user_in_db.dict())
+
+@app.post("/token", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    db = get_db()
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username, "role": user.role}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer", "role": user.role}
+
+@app.get("/users/me", response_model=User)
+async def read_users_me(current_user: User = Depends(get_current_active_user)):
+    return current_user
+
+# User Management (Admin Only)
+@app.get("/users", response_model=List[User])
+async def get_all_users(current_user: User = Depends(require_admin)):
+    db = get_db()
+    docs = db.collection("users").stream()
+    return [User(**u.to_dict()) for u in docs]
+
+@app.post("/users", response_model=User)
+async def create_new_user(user_data: UserCreate, current_user: User = Depends(require_admin)):
+    db = get_db()
+    # Check if user already exists
+    if db.collection("users").document(user_data.username).get().exists:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    
+    hashed_pw = get_password_hash(user_data.password)
+    user_in_db = UserInDB(
+        username=user_data.username,
+        role=user_data.role,
+        disabled=user_data.disabled,
+        hashed_password=hashed_pw
+    )
+    db.collection("users").document(user_data.username).set(user_in_db.dict())
+    return User(**user_in_db.dict())
+
+@app.put("/users/{username}", response_model=User)
+async def update_user(username: str, user_data: UserCreate, current_user: User = Depends(require_admin)):
+    db = get_db()
+    doc_ref = db.collection("users").document(username)
+    if not doc_ref.get().exists:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    hashed_pw = get_password_hash(user_data.password)
+    user_in_db = UserInDB(
+        username=username,
+        role=user_data.role,
+        disabled=user_data.disabled,
+        hashed_password=hashed_pw
+    )
+    doc_ref.set(user_in_db.dict())
+    return User(**user_in_db.dict())
+
+@app.delete("/users/{username}")
+async def delete_user(username: str, current_user: User = Depends(require_admin)):
+    if username == "admin":
+        raise HTTPException(status_code=400, detail="Cannot delete super-admin")
+    db = get_db()
+    db.collection("users").document(username).delete()
+    return {"status": "deleted"}
+
 @app.get("/launches", response_model=List[dict])
-async def get_launches():
+async def get_launches(current_user: User = Depends(get_current_active_user)):
     db = get_db()
     docs = db.collection("launches").stream()
     return [doc.to_dict() for doc in docs]
 
 @app.post("/launches")
-async def create_launch(data: Launch):
+async def create_launch(data: Launch, current_user: User = Depends(require_admin)):
     db = get_db()
     db.collection("launches").document(data.slug).set(data.dict())
     return data
 
 @app.delete("/launches/{slug}")
-async def delete_launch(slug: str):
+async def delete_launch(slug: str, current_user: User = Depends(require_admin)):
     db = get_db()
     db.collection("launches").document(slug).delete()
     return {"status": "deleted"}
 
 @app.get("/source-configs", response_model=List[dict])
-async def get_source_configs():
+async def get_source_configs(current_user: User = Depends(get_current_active_user)):
     db = get_db()
     docs = db.collection("source_configs").stream()
     return [doc.to_dict() for doc in docs]
 
 @app.post("/source-configs")
-async def create_source_config(data: SourceConfig):
+async def create_source_config(data: SourceConfig, current_user: User = Depends(require_admin)):
     db = get_db()
     db.collection("source_configs").document(data.slug).set(data.dict())
     return data
@@ -108,43 +192,43 @@ async def delete_source_config(slug: str):
 
 # Admin endpoints for Campaign Generator
 @app.get("/products", response_model=List[Product])
-async def get_products():
+async def get_products(current_user: User = Depends(get_current_active_user)):
     db = get_db()
     docs = db.collection("products").stream()
     return [Product(**doc.to_dict()) for doc in docs]
 
 @app.post("/products")
-async def create_product(data: Product):
+async def create_product(data: Product, current_user: User = Depends(require_admin)):
     db = get_db()
     db.collection("products").document(data.slug).set(data.dict())
     return data
 
 @app.get("/turmas", response_model=List[Turma])
-async def get_turmas():
+async def get_turmas(current_user: User = Depends(get_current_active_user)):
     db = get_db()
     docs = db.collection("turmas").stream()
     return [Turma(**doc.to_dict()) for doc in docs]
 
 @app.post("/turmas")
-async def create_turma(data: Turma):
+async def create_turma(data: Turma, current_user: User = Depends(require_admin)):
     db = get_db()
     db.collection("turmas").document(data.slug).set(data.dict())
     return data
 
 @app.get("/launch-types", response_model=List[LaunchType])
-async def get_launch_types():
+async def get_launch_types(current_user: User = Depends(get_current_active_user)):
     db = get_db()
     docs = db.collection("launch_types").stream()
     return [LaunchType(**doc.to_dict()) for doc in docs]
 
 @app.post("/launch-types")
-async def create_launch_type(data: LaunchType):
+async def create_launch_type(data: LaunchType, current_user: User = Depends(require_admin)):
     db = get_db()
     db.collection("launch_types").document(data.slug).set(data.dict())
     return data
 
 @app.post("/links/generate", response_model=Link)
-async def generate_link(data: LinkCreate):
+async def generate_link(data: LinkCreate, current_user: User = Depends(require_editor)):
     db = get_db()
     
     # 1. Normalization
@@ -221,6 +305,7 @@ async def generate_link(data: LinkCreate):
 
 @app.get("/links", response_model=List[Link])
 async def list_links(
+    current_user: User = Depends(get_current_active_user),
     launch_id: Optional[str] = None,
     utm_source: Optional[str] = None,
     utm_medium: Optional[str] = None
