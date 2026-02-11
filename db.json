@@ -1,0 +1,304 @@
+{
+    "source_configs": {
+        "email": {
+            "id": null,
+            "slug": "email",
+            "name": "Email",
+            "mediums": [
+                {
+                    "slug": "newsletter",
+                    "name": "Newsletter",
+                    "allowed_contents": [
+                        "lista_atual",
+                        "lista_antiga"
+                    ]
+                },
+                {
+                    "slug": "marketing",
+                    "name": "Marketing",
+                    "allowed_contents": [
+                        "ex_alunos",
+                        "engajados"
+                    ]
+                }
+            ],
+            "required_fields": [
+                "date"
+            ],
+            "term_config": "standard"
+        },
+        "whatsapp": {
+            "slug": "whatsapp",
+            "name": "WhatsApp",
+            "term_config": "standard",
+            "required_fields": [
+                "date"
+            ],
+            "mediums": [
+                {
+                    "slug": "grupos",
+                    "name": "Grupos",
+                    "allowed_contents": [
+                        "grupos_antigos",
+                        "grupos_atuais"
+                    ]
+                },
+                {
+                    "slug": "api",
+                    "name": "API",
+                    "allowed_contents": [
+                        "ex-alunos",
+                        "lista_lanc_atual"
+                    ]
+                }
+            ]
+        },
+        "site": {
+            "slug": "site",
+            "name": "Site",
+            "term_config": "no_date",
+            "required_fields": [],
+            "mediums": [
+                {
+                    "slug": "site_institucional",
+                    "name": "Institucional",
+                    "allowed_contents": [
+                        "banner",
+                        "cupom_exclusivo"
+                    ]
+                }
+            ]
+        },
+        "meta": {
+            "id": null,
+            "slug": "meta",
+            "name": "Meta",
+            "mediums": [
+                {
+                    "slug": "ads",
+                    "name": "Ads",
+                    "allowed_contents": [
+                        "Nativos"
+                    ]
+                }
+            ],
+            "required_fields": [],
+            "term_config": "standard"
+        }
+    },
+    "products": {
+        "vde1f": {
+            "slug": "vde1f",
+            "nome": "VDE1F"
+        }
+    },
+    "turmas": {
+        "120d": {
+            "slug": "120d",
+            "nome": "120d"
+        }
+    },
+    "launch_types": {
+        "passariano": {
+            "slug": "passariano",
+            "nome": "Passariano"
+        },
+        "evento": {
+            "slug": "evento",
+            "nome": "Evento"
+        }
+    },
+    "launches": {
+        "vde1f_120d_evento_01-24": {
+            "id": null,
+            "slug": "vde1f_120d_evento_01-24",
+            "nome": "vde1f_120d_evento_01-24",
+            "data_inicio": null,
+            "data_fim": null,
+            "owner": "admin",
+            "status": "active"
+        },
+        "vde1f_120d_passariano_05-26": {
+            "id": null,
+            "slug": "vde1f_120d_passariano_05-26",
+            "nome": "vde1f_120d_passariano_05-26",
+            "data_inicio": null,
+            "data_fim": null,
+            "owner": "admin",
+            "status": "active"
+        },
+        "vde1f_120d_evento_10-25": {
+            "id": null,
+            "slug": "vde1f_120d_evento_10-25",
+            "nome": "vde1f_120d_evento_10-25",
+            "data_inicio": null,
+            "data_fim": null,
+            "owner": "admin",
+            "status": "active"
+        }
+    },
+    "settings": {
+        "link_counter": {
+            "count": 5
+        }
+    },
+    "links": {
+        "lnk_000001": {
+            "id": "lnk_000001",
+            "link_type": "captacao",
+            "base_url": "https://metodovde.com.br/concursos/carreirasjuridicas",
+            "path": "",
+            "full_url": "https://metodovde.com.br/concursos/carreirasjuridicas?utm_source=whatsapp&utm_medium=api&utm_campaign=vde1f_120d_evento_01-24&utm_content=ex-alunos&utm_term=teste_11-12-2025&utm_id=lnk_000001",
+            "utm_source": "whatsapp",
+            "utm_medium": "api",
+            "utm_campaign": "vde1f_120d_evento_01-24",
+            "utm_content": "ex-alunos",
+            "utm_term": "teste_11-12-2025",
+            "src": null,
+            "sck": null,
+            "xcode": null,
+            "custom_params": {},
+            "notes": "",
+            "created_by": "system_user",
+            "created_at": "2026-02-10 23:44:48.959896",
+            "status": "active"
+        },
+        "lnk_000002": {
+            "id": "lnk_000002",
+            "link_type": "captacao",
+            "base_url": "https://metodovde.com.br/concursos/carreirasjuridicas",
+            "path": "",
+            "full_url": "https://metodovde.com.br/concursos/carreirasjuridicas?utm_source=whatsapp&utm_medium=api&utm_campaign=vde1f_120d_passariano_05-26&utm_content=ex-alunos&utm_term=quente_11-11-2026&utm_id=lnk_000002",
+            "utm_source": "whatsapp",
+            "utm_medium": "api",
+            "utm_campaign": "vde1f_120d_passariano_05-26",
+            "utm_content": "ex-alunos",
+            "utm_term": "quente_11-11-2026",
+            "src": null,
+            "sck": null,
+            "xcode": null,
+            "custom_params": {},
+            "notes": "ppppppppp",
+            "created_by": "system_user",
+            "created_at": "2026-02-11 00:00:37.029823",
+            "status": "active"
+        },
+        "lnk_000003": {
+            "id": "lnk_000003",
+            "link_type": "captacao",
+            "base_url": "https://metodovde.com.br/concursos/carreirasjuridicas",
+            "path": "",
+            "full_url": "https://metodovde.com.br/concursos/carreirasjuridicas?utm_source=meta&utm_medium=ads&utm_campaign=vde1f_120d_passariano_05-26&utm_content=nativos&utm_term=teste_nativo_10-02-2026&utm_id=lnk_000003",
+            "utm_source": "meta",
+            "utm_medium": "ads",
+            "utm_campaign": "vde1f_120d_passariano_05-26",
+            "utm_content": "nativos",
+            "utm_term": "teste_nativo_10-02-2026",
+            "src": null,
+            "sck": null,
+            "xcode": null,
+            "custom_params": {},
+            "notes": "",
+            "created_by": "system_user",
+            "created_at": "2026-02-11 00:21:56.805364",
+            "status": "active"
+        },
+        "lnk_000004": {
+            "id": "lnk_000004",
+            "link_type": "captacao",
+            "base_url": "https://metodovde.com.br/concursos/carreirasjuridicas",
+            "path": "",
+            "full_url": "https://metodovde.com.br/concursos/carreirasjuridicas?utm_source=email&utm_medium=newsletter&utm_campaign=vde1f_120d_evento_10-25&utm_content=lista_atual&utm_term=teste_10-02-2026&utm_id=lnk_000004",
+            "utm_source": "email",
+            "utm_medium": "newsletter",
+            "utm_campaign": "vde1f_120d_evento_10-25",
+            "utm_content": "lista_atual",
+            "utm_term": "teste_10-02-2026",
+            "src": null,
+            "sck": null,
+            "xcode": null,
+            "custom_params": {},
+            "notes": "",
+            "created_by": "system_user",
+            "created_at": "2026-02-11 00:31:24.555239",
+            "status": "active"
+        },
+        "lnk_000005": {
+            "id": "lnk_000005",
+            "link_type": "captacao",
+            "base_url": "https://metodovde.com.br/concursos/carreirasjuridicas",
+            "path": "",
+            "full_url": "https://metodovde.com.br/concursos/carreirasjuridicas?utm_source=whatsapp&utm_medium=grupos&utm_campaign=vde1f_120d_evento_01-24&utm_content=grupos_atuais&utm_term=banana_22-02-2026&utm_id=lnk_000005",
+            "utm_source": "whatsapp",
+            "utm_medium": "grupos",
+            "utm_campaign": "vde1f_120d_evento_01-24",
+            "utm_content": "grupos_atuais",
+            "utm_term": "banana_22-02-2026",
+            "src": null,
+            "sck": null,
+            "xcode": null,
+            "custom_params": {},
+            "notes": "HAHAHAHA",
+            "created_by": "system_user",
+            "created_at": "2026-02-11 00:44:59.856751",
+            "status": "active"
+        }
+    },
+    "audits": {
+        "cf05d491-25b2-48fb-b9f8-a10e31ebb8ef": {
+            "event_id": "d64b8199-027f-4904-b2f2-1d8b092db10a",
+            "link_id": "lnk_000001",
+            "actor": "system_user",
+            "action": "create",
+            "timestamp": "2026-02-10 23:44:48.960732"
+        },
+        "2ebfe46b-cc42-4c27-94ef-51a6f5fc111b": {
+            "event_id": "d5350b5e-8024-43f5-90ba-821a07b7f6c4",
+            "link_id": "lnk_000002",
+            "actor": "system_user",
+            "action": "create",
+            "timestamp": "2026-02-11 00:00:37.030374"
+        },
+        "3968c5e5-3d70-4167-97fd-271737a47351": {
+            "event_id": "1f32bad5-2889-47fc-85a9-5248ab1207da",
+            "link_id": "lnk_000003",
+            "actor": "system_user",
+            "action": "create",
+            "timestamp": "2026-02-11 00:21:56.806691"
+        },
+        "395a7f4b-d679-4950-b508-1436098709f2": {
+            "event_id": "1cee48b1-f374-4be5-a691-11c788bfb73e",
+            "link_id": "lnk_000004",
+            "actor": "system_user",
+            "action": "create",
+            "timestamp": "2026-02-11 00:31:24.556231"
+        },
+        "f82d1d02-7b3f-4b86-a2d8-97347a95ae53": {
+            "event_id": "97df6ae1-737e-4a6f-a5ae-98245c565f2a",
+            "link_id": "lnk_000005",
+            "actor": "system_user",
+            "action": "create",
+            "timestamp": "2026-02-11 00:44:59.857631"
+        }
+    },
+    "users": {
+        "admin": {
+            "username": "admin",
+            "role": "admin",
+            "disabled": false,
+            "hashed_password": "$2b$12$lE86dZ88dHRZ5IiK0b3DlOOdQFp1PzVYFYhwJHwhmF13YUpI6hFv."
+        },
+        "user": {
+            "username": "user",
+            "role": "user",
+            "disabled": false,
+            "hashed_password": "$2b$12$FZNnTYhVXLru7z11VlPI/OIbE4MKinDetmGKeEwtM3zFsugtBYIYe"
+        },
+        "viewer": {
+            "username": "viewer",
+            "role": "viewer",
+            "disabled": false,
+            "hashed_password": "$2b$12$rdtBSnhmOCtclgv3BhdAL.6u8g664jprKYRjhfnzc9sBEq8SN9wga"
+        }
+    }
+}
