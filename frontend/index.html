@@ -145,9 +145,14 @@
 
                 <div id="result-container" class="glass-card result-card hidden">
                     <h3>Resultado Gerado</h3>
-                    <div class="result-url-wrapper">
-                        <code id="final-url"></code>
-                        <button class="btn btn-copy" id="btn-copy">Copiar</button>
+                    <div class="result-preview">
+                        <label>URL FINAL GERADA</label>
+                        <div class="preview-box result-preview-box">
+                            <div class="result-url-wrapper">
+                                <code id="final-url"></code>
+                                <button class="btn btn-copy" id="btn-copy" type="button">Copiar</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="utm-details">
                         <div class="utm-tag">ID: <span id="res-id"></span></div>
@@ -542,12 +547,12 @@
                                 Selecione uma Source para gerenciar Contents.
                             </div>
                         </div>
-                    </div>
 
-                    <div id="content-list-card" class="glass-card full-width hidden">
-                        <h3 style="margin-bottom: 1.5rem;">Contents for <span id="content-current-context-label"
-                                class="accent">...</span></h3>
-                        <div class="admin-list" id="admin-contents-list"></div>
+                        <div id="content-list-card" class="glass-card full-width hidden">
+                            <h3 style="margin-bottom: 1.5rem;">Contents for <span id="content-current-context-label"
+                                    class="accent">...</span></h3>
+                            <div class="admin-list" id="admin-contents-list"></div>
+                        </div>
                     </div>
                 </div>
     </div>

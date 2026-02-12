@@ -231,6 +231,10 @@ function setupEventListeners() {
 
     // Button Save Campaign
     addListener('btn-save-campaign', 'click', saveGeneratedCampaign);
+    addListener('btn-copy', 'click', () => {
+        const finalUrl = document.getElementById('final-url');
+        if (finalUrl && finalUrl.innerText) copyToClipboard(finalUrl.innerText);
+    });
 
     // Link Generation Flow
     addListener('channel', 'change', (e) => {
@@ -529,8 +533,20 @@ async function saveGeneratedCampaign() {
             nameInput.value = '';
             await fetchLaunches();
             renderAdminLists();
+            return;
         }
+
+        let errorMsg = `Erro ao salvar Campaign (status ${res.status}).`;
+        try {
+            const data = await res.json();
+            if (data?.detail) errorMsg = `${errorMsg} ${data.detail}`;
+        } catch (_) {
+            // Ignore JSON parsing failures.
+        }
+        console.error('Save campaign failed:', res.status, res.statusText);
+        alert(errorMsg);
     } catch (err) {
+        console.error('Save campaign error:', err);
         alert('Erro ao salvar Campaign');
     } finally {
         if (btn) btn.disabled = false;
@@ -588,10 +604,23 @@ async function handleGenerateLink(e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+        if (!res.ok) {
+            let msg = `Erro ao gerar o link (status ${res.status}).`;
+            try {
+                const errData = await res.json();
+                if (errData?.detail) msg = `${msg} ${errData.detail}`;
+            } catch (_) {
+                // Ignore response parsing errors.
+            }
+            alert(msg);
+            return;
+        }
+
         const link = await res.json();
         showResult(link);
         await fetchLinks();
     } catch (err) {
+        console.error('Generate link error:', err);
         alert('Erro ao gerar o link.');
     }
 }

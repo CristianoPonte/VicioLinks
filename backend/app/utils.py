@@ -21,16 +21,32 @@ def normalize_utm(text: str) -> str:
     """Alias for slugger, used for UTM parameters."""
     return slugger(text)
 
-def build_full_url(base_url: str, params: Dict[str, Any]) -> str:
-    """Construct full URL with query parameters."""
-    # Filter out None or empty values
-    clean_params = {k: v for k, v in params.items() if v is not None and v != ""}
+def build_full_url(base_url: str, path: str, utm_params: Dict[str, Any], custom_params: Dict[str, Any]) -> str:
+    """Construct full URL with optional path and query parameters."""
+    # Build final base with optional path.
+    final_base = base_url
+    if path:
+        if final_base.endswith("/") and path.startswith("/"):
+            final_base = f"{final_base}{path[1:]}"
+        elif not final_base.endswith("/") and not path.startswith("/"):
+            final_base = f"{final_base}/{path}"
+        else:
+            final_base = f"{final_base}{path}"
+
+    # Merge params and filter out None/empty values.
+    merged = {}
+    if utm_params:
+        merged.update(utm_params)
+    if custom_params:
+        merged.update(custom_params)
+
+    clean_params = {k: v for k, v in merged.items() if v is not None and v != ""}
     if not clean_params:
-        return base_url
-        
+        return final_base
+
     query_string = urlencode(clean_params)
-    separator = "&" if "?" in base_url else "?"
-    return f"{base_url}{separator}{query_string}"
+    separator = "&" if "?" in final_base else "?"
+    return f"{final_base}{separator}{query_string}"
 
 def generate_utm_id(db) -> str:
     """Generate a unique ID for a link (e.g. lnk_000123)."""

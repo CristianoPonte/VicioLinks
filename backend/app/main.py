@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.encoders import jsonable_encoder
 from typing import List, Optional
 from datetime import datetime, timedelta
 import uuid
@@ -229,7 +230,9 @@ async def get_launches(current_user: User = Depends(get_current_active_user)):
 @app.post("/launches")
 async def create_launch(data: Launch, current_user: User = Depends(require_admin)):
     db = get_db()
-    db.table("launches").upsert(data.dict()).execute()
+    # Avoid sending optional fields that aren't in the DB schema.
+    payload = jsonable_encoder(data, exclude_none=True)
+    db.table("launches").upsert(payload).execute()
     return data
 
 @app.delete("/launches/{slug}")
@@ -372,7 +375,8 @@ async def generate_link(data: LinkCreate, current_user: User = Depends(require_e
     
     # 7. Save
     # Supabase uses 'insert' or 'upsert'. 'utm_id' is our primary key or strict unique.
-    db.table("links").insert(link_obj.dict()).execute()
+    payload = jsonable_encoder(link_obj, exclude_none=True, exclude={"status"})
+    db.table("links").insert(payload).execute()
     
     # Audit logic
     db.table("audits").insert({
