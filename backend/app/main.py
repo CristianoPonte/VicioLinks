@@ -8,7 +8,16 @@ import uuid
 import os
 
 from .models import Link, LinkCreate, Launch, SourceConfig, Product, Turma, LaunchType, Token, User, UserInDB, UserCreate
-from .utils import normalize_utm, build_full_url, generate_utm_id, slugger
+from .utils import (
+    normalize_utm,
+    normalize_campaign,
+    normalize_utm_term,
+    sanitize_custom_params,
+    build_full_url,
+    build_tracking_params,
+    generate_utm_id,
+    slugger,
+)
 from .database import get_db
 from .auth import authenticate_user, create_access_token, get_current_active_user, require_admin, require_editor, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash
 from fastapi.security import OAuth2PasswordRequestForm
@@ -43,7 +52,6 @@ async def startup_event():
             return res.count == 0
         except Exception as e:
             print(f"Error checking table {table_name}: {e}")
-            return True # Assume empty on error to be safe? Or False to avoid overwrite? 
             # If table doesn't exist, this will error. User needs to run SQL.
             return True
 
@@ -146,8 +154,7 @@ async def startup_event():
             for u in users:
                 hashed_pw = get_password_hash(u["password"])
                 user_in_db = UserInDB(username=u["username"], role=u["role"], hashed_password=hashed_pw)
-                # Store using dict() to serialize properly
-                db.table("users").upsert(user_in_db.dict()).execute()
+                db.table("users").upsert(user_in_db.model_dump()).execute()
     except Exception as e:
         print(f"Seeding failed: {e}")
 
@@ -193,8 +200,9 @@ async def create_new_user(user_data: UserCreate, current_user: User = Depends(re
         disabled=user_data.disabled,
         hashed_password=hashed_pw
     )
-    db.table("users").upsert(user_in_db.dict()).execute()
-    return User(**user_in_db.dict())
+    payload = user_in_db.model_dump()
+    db.table("users").upsert(payload).execute()
+    return User(**payload)
 
 @app.put("/users/{username}", response_model=User)
 async def update_user(username: str, user_data: UserCreate, current_user: User = Depends(require_admin)):
@@ -210,8 +218,9 @@ async def update_user(username: str, user_data: UserCreate, current_user: User =
         disabled=user_data.disabled,
         hashed_password=hashed_pw
     )
-    db.table("users").update(user_in_db.dict()).eq("username", username).execute()
-    return User(**user_in_db.dict())
+    payload = user_in_db.model_dump()
+    db.table("users").update(payload).eq("username", username).execute()
+    return User(**payload)
 
 @app.delete("/users/{username}")
 async def delete_user(username: str, current_user: User = Depends(require_admin)):
@@ -230,10 +239,16 @@ async def get_launches(current_user: User = Depends(get_current_active_user)):
 @app.post("/launches")
 async def create_launch(data: Launch, current_user: User = Depends(require_admin)):
     db = get_db()
-    # Avoid sending optional fields that aren't in the DB schema.
-    payload = jsonable_encoder(data, exclude_none=True)
+    normalized_slug = normalize_campaign(data.slug)
+    # Launch table does not include _id/data_inicio/data_fim in current schema.
+    payload = jsonable_encoder(
+        data,
+        exclude_none=True,
+        exclude={"id", "data_inicio", "data_fim"}
+    )
+    payload["slug"] = normalized_slug
     db.table("launches").upsert(payload).execute()
-    return data
+    return {**payload}
 
 @app.delete("/launches/{slug}")
 async def delete_launch(slug: str, current_user: User = Depends(require_admin)):
@@ -251,8 +266,7 @@ async def get_source_configs(current_user: User = Depends(get_current_active_use
 async def create_source_config(data: SourceConfig, current_user: User = Depends(require_admin)):
     try:
         db = get_db()
-        # Use model_dump() instead of deprecated dict()
-        data_dict = data.model_dump(exclude_none=True, by_alias=True)
+        data_dict = jsonable_encoder(data, exclude_none=True, exclude={"id"})
         print(f"[DEBUG] Upserting source config: {data_dict}")
         
         result = db.table("source_configs").upsert(data_dict).execute()
@@ -267,7 +281,7 @@ async def create_source_config(data: SourceConfig, current_user: User = Depends(
         raise HTTPException(status_code=500, detail=f"Failed to save source config: {str(e)}")
 
 @app.delete("/source-configs/{slug}")
-async def delete_source_config(slug: str):
+async def delete_source_config(slug: str, current_user: User = Depends(require_admin)):
     db = get_db()
     db.table("source_configs").delete().eq("slug", slug).execute()
     return {"status": "deleted"}
@@ -282,7 +296,7 @@ async def get_products(current_user: User = Depends(get_current_active_user)):
 @app.post("/products")
 async def create_product(data: Product, current_user: User = Depends(require_admin)):
     db = get_db()
-    db.table("products").upsert(data.dict()).execute()
+    db.table("products").upsert(jsonable_encoder(data, exclude_none=True)).execute()
     return data
 
 @app.get("/turmas", response_model=List[Turma])
@@ -294,7 +308,7 @@ async def get_turmas(current_user: User = Depends(get_current_active_user)):
 @app.post("/turmas")
 async def create_turma(data: Turma, current_user: User = Depends(require_admin)):
     db = get_db()
-    db.table("turmas").upsert(data.dict()).execute()
+    db.table("turmas").upsert(jsonable_encoder(data, exclude_none=True)).execute()
     return data
 
 @app.get("/launch-types", response_model=List[LaunchType])
@@ -306,7 +320,7 @@ async def get_launch_types(current_user: User = Depends(get_current_active_user)
 @app.post("/launch-types")
 async def create_launch_type(data: LaunchType, current_user: User = Depends(require_admin)):
     db = get_db()
-    db.table("launch_types").upsert(data.dict()).execute()
+    db.table("launch_types").upsert(jsonable_encoder(data, exclude_none=True)).execute()
     return data
 
 @app.post("/links/generate", response_model=Link)
@@ -316,9 +330,9 @@ async def generate_link(data: LinkCreate, current_user: User = Depends(require_e
     # 1. Normalization
     utm_source = normalize_utm(data.utm_source)
     utm_medium = normalize_utm(data.utm_medium)
-    utm_campaign = normalize_utm(data.utm_campaign)
+    utm_campaign = normalize_campaign(data.utm_campaign)
     utm_content = normalize_utm(data.utm_content or "")
-    utm_term = normalize_utm(data.utm_term or "")
+    utm_term = normalize_utm_term(data.utm_term or "")
 
     # 2. Validation / Governance
     # (Simplified for now, UI handles most of it)
@@ -329,28 +343,29 @@ async def generate_link(data: LinkCreate, current_user: User = Depends(require_e
     # 3. Generate Atomic ID
     utm_id = generate_utm_id(db)
     
-    # 4. Handle Vendas Contract mapping
-    src = None
-    sck = None
-    xcode = None
-    
-    utms = {
-        "utm_source": utm_source,
-        "utm_medium": utm_medium,
-        "utm_campaign": utm_campaign,
-        "utm_content": utm_content,
-        "utm_term": utm_term,
-        "utm_id": utm_id
-    }
-
+    # 4. Build query params and vendas contract fields.
+    utms, src, sck, xcode = build_tracking_params(
+        link_type=data.link_type,
+        utm_source=utm_source,
+        utm_medium=utm_medium,
+        utm_campaign=utm_campaign,
+        utm_content=utm_content,
+        utm_term=utm_term,
+        utm_id=utm_id,
+    )
     if data.link_type == "vendas":
-        src = utm_medium
-        sck = f"{utm_source}_{utm_content}".strip("_")
+        # Hard guard for legacy behavior: always enforce vendas contract.
+        src = f"{utm_source}_{utm_content}".strip("_")
+        sck = utm_medium
         xcode = utm_id
-        utms.update({"src": src, "sck": sck, "xcode": xcode})
+        utms["src"] = src
+        utms["sck"] = sck
+        utms["xcode"] = xcode
+        utms.pop("utm_id", None)
     
     # 5. Build Full URL
-    full_url = build_full_url(data.base_url, data.path, utms, data.custom_params)
+    clean_custom_params = sanitize_custom_params(data.custom_params)
+    full_url = build_full_url(data.base_url, data.path, utms, clean_custom_params)
     
     # 6. Create Object
     link_obj = Link(
@@ -367,7 +382,7 @@ async def generate_link(data: LinkCreate, current_user: User = Depends(require_e
         src=src,
         sck=sck,
         xcode=xcode,
-        custom_params=data.custom_params,
+        custom_params=clean_custom_params,
         notes=data.notes,
         created_by="system_user",
         created_at=datetime.utcnow()
@@ -394,7 +409,8 @@ async def list_links(
     current_user: User = Depends(get_current_active_user),
     launch_id: Optional[str] = None,
     utm_source: Optional[str] = None,
-    utm_medium: Optional[str] = None
+    utm_medium: Optional[str] = None,
+    link_type: Optional[str] = Query(None, pattern="^(captacao|vendas)$")
 ):
     db = get_db()
     
@@ -406,11 +422,22 @@ async def list_links(
         query = query.eq("utm_source", utm_source)
     if utm_medium:
         query = query.eq("utm_medium", utm_medium)
+    if link_type:
+        query = query.eq("link_type", link_type)
     
     # Sort by date
     res = query.order("created_at", desc=True).limit(100).execute()
     
     return [Link(**l) for l in res.data]
+
+@app.delete("/links/{link_id}")
+async def delete_link(link_id: str, current_user: User = Depends(require_editor)):
+    db = get_db()
+
+    # Keep FK consistency when audits references links.id.
+    db.table("audits").delete().eq("link_id", link_id).execute()
+    db.table("links").delete().eq("id", link_id).execute()
+    return {"status": "deleted", "id": link_id}
 
 # Mount frontend at root last to avoid intercepting API routes
 if os.path.exists(frontend_path):

@@ -190,6 +190,14 @@
                             <option value="">Todas as Sources</option>
                         </select>
                     </div>
+                    <div class="filter-group">
+                        <label>Tipo</label>
+                        <select id="filter-link-type">
+                            <option value="">Todos os Tipos</option>
+                            <option value="captacao">Captação</option>
+                            <option value="vendas">Vendas</option>
+                        </select>
+                    </div>
                     <div class="filter-actions">
                         <button class="btn btn-secondary btn-sm" id="btn-export">
                             <span>Exportar CSV</span>
@@ -606,11 +614,20 @@
     </main>
     </div> <!-- Close app-container -->
 
+    <div id="delete-link-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-card">
+            <h3>Remover Link</h3>
+            <p>Deseja remover este link permanentemente do repositório?</p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="btn-cancel-delete-link">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btn-confirm-delete-link">Remover</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast hidden">Copiado para a área de transferência!</div>
 
     <script src="app.js"></script>
 </body>
-
-</html>
 
 </html>

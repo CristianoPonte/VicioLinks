@@ -447,6 +447,82 @@ td {
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+td.actions-col,
+th.actions-col {
+    text-align: center;
+}
+
+.repo-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+}
+
+.btn-icon-trash {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 0.45rem;
+    border: 1px solid rgba(248, 113, 113, 0.55);
+    background: transparent;
+    color: #f87171;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-icon-trash svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.btn-icon-trash:hover {
+    color: #fecaca;
+    border-color: #f87171;
+    background: rgba(248, 113, 113, 0.12);
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 12000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 1.5rem;
+}
+
+.modal-card h3 {
+    margin-bottom: 0.35rem;
+}
+
+.modal-card p {
+    color: var(--text-muted);
+    margin-bottom: 1.2rem;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.65rem;
+}
+
 /* Admin Grid */
 .admin-grid {
     display: grid;

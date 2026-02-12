@@ -7,7 +7,7 @@ Links de Vendas → Link direto para uma página de vendas ou checkout.
 
 ### UTMs Obrigatórias
 utm_source (ferramenta) = Instagram | YouTube | Google | Meta | Site | WhatsApp | Email
-utm_medium = tipo macro: organic_social | paid_social | email | messaging | internal
+utm_medium = 
 utm_campaign = campanha padronizada (sem acento): enam90d_2026_1_captacao
 
 ### UTMs Opcionais
@@ -19,8 +19,8 @@ utm_id = ID único do link (lnk_000123) para bater com seu Link Hub (deve ser ge
 
 ### No caso de vendas, muda o padrão. As UTMs obrigatórias são:
 utm_campaign = igual à usada na captação
-src = utm_medium (igual ao medium da captação)
-sck = utm_source + _ + utm_content (concatenar source e content em uma forma mais enxuta)
+src = de onde veio (nível macro/canais)
+sck = quem vendeu? qual grupo? qual lista? qual operador?
 xcode = utm_id
 
 ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
@@ -126,7 +126,7 @@ utm_term segue o padrão (seção automação).
 ## Se utm_source == "Site":
 
 ### Possibilidades de utm_medium:
-- site_institucional
+- institucional
 - plataforma_vde1f
 - plataforma_vde2f
 - plataforma_carreirasjur

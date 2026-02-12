@@ -8,6 +8,7 @@ let sourceConfigs = [];
 let currentLinks = [];
 let filteredLinks = []; // Store current filtered state for export
 let currentMode = 'captacao'; // 'captacao' or 'vendas'
+let pendingDeleteLinkId = null;
 
 // State for Admin Cascading
 let adminSelectedSource = null;
@@ -235,6 +236,20 @@ function setupEventListeners() {
         const finalUrl = document.getElementById('final-url');
         if (finalUrl && finalUrl.innerText) copyToClipboard(finalUrl.innerText);
     });
+    addListener('links-tbody', 'click', (e) => {
+        const copyBtn = e.target.closest('button[data-copy-url]');
+        if (copyBtn) {
+            copyToClipboard(copyBtn.dataset.copyUrl || '');
+            return;
+        }
+
+        const deleteBtn = e.target.closest('button[data-delete-link-id]');
+        if (deleteBtn) {
+            openDeleteLinkModal(deleteBtn.dataset.deleteLinkId);
+        }
+    });
+    addListener('btn-cancel-delete-link', 'click', closeDeleteLinkModal);
+    addListener('btn-confirm-delete-link', 'click', confirmDeleteLink);
 
     // Link Generation Flow
     addListener('channel', 'change', (e) => {
@@ -268,6 +283,7 @@ function setupEventListeners() {
     addListener('filter-medium', 'change', applyFilters); // Just apply filters, don't update contents
     addListener('filter-content', 'change', applyFilters);
     addListener('filter-term', 'input', applyFilters);
+    addListener('filter-link-type', 'change', applyFilters);
 
     addListener('btn-toggle-advanced', 'click', () => {
         const adv = document.getElementById('advanced-filters');
@@ -434,16 +450,19 @@ function applyFilters() {
     const medium = document.getElementById('filter-medium').value;
     const content = document.getElementById('filter-content').value;
     const term = document.getElementById('filter-term').value.toLowerCase();
+    const linkType = document.getElementById('filter-link-type').value;
 
     const filtered = currentLinks.filter(l => {
+        const effectiveType = l.link_type || ((l.xcode || l.src || l.sck) ? 'vendas' : 'captacao');
         const matchesSearch = !search || l.id.toLowerCase().includes(search) || (l.full_url && l.full_url.toLowerCase().includes(search));
         const matchesCampaign = !campaign || l.utm_campaign === campaign;
         const matchesSource = !source || l.utm_source === source;
         const matchesMedium = !medium || l.utm_medium === medium;
         const matchesContent = !content || l.utm_content === content;
         const matchesTerm = !term || (l.utm_term && l.utm_term.toLowerCase().includes(term));
+        const matchesType = !linkType || effectiveType === linkType;
 
-        return matchesSearch && matchesCampaign && matchesSource && matchesMedium && matchesContent && matchesTerm;
+        return matchesSearch && matchesCampaign && matchesSource && matchesMedium && matchesContent && matchesTerm && matchesType;
     });
 
     renderLinksTable(filtered);
@@ -582,7 +601,8 @@ async function handleGenerateLink(e) {
         dateStr = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
     }
 
-    if (sourceConfig && sourceConfig.term_config === 'standard') {
+    const termConfig = sourceConfig?.config?.term_config || 'standard';
+    if (termConfig === 'standard') {
         utmTerm = utmTerm ? `${utmTerm}_${dateStr}` : dateStr;
     }
 
@@ -1113,9 +1133,37 @@ function showToast(message) {
     }
 }
 
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text);
-    showToast("Copiado para a área de transferência!");
+async function copyToClipboard(text) {
+    if (!text) return;
+
+    try {
+        if (navigator?.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+        } else {
+            const input = document.createElement('textarea');
+            input.value = text;
+            input.style.position = 'fixed';
+            input.style.left = '-9999px';
+            document.body.appendChild(input);
+            input.focus();
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+        }
+        showToast("Copiado para a área de transferência!");
+    } catch (err) {
+        console.error('Clipboard copy failed:', err);
+        alert('Não foi possível copiar automaticamente. Copie manualmente.');
+    }
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 function splitTerm(term) {
@@ -1139,17 +1187,25 @@ function renderLinksTable(links = currentLinks) {
 
     tbody.innerHTML = links.map(l => {
         const { detail, date } = splitTerm(l.utm_term);
+        const fullUrl = l.full_url || '';
         return `
             <tr>
-                <td><code>${l.id}</code></td>
-                <td>${l.utm_campaign}</td>
-                <td>${l.utm_source}</td>
-                <td>${l.utm_medium}</td>
-                <td>${l.utm_content}</td>
-                <td>${detail}</td>
-                <td>${date}</td>
+                <td><code>${escapeHtml(l.id)}</code></td>
+                <td>${escapeHtml(l.utm_campaign)}</td>
+                <td>${escapeHtml(l.utm_source)}</td>
+                <td>${escapeHtml(l.utm_medium)}</td>
+                <td>${escapeHtml(l.utm_content)}</td>
+                <td>${escapeHtml(detail)}</td>
+                <td>${escapeHtml(date)}</td>
                 <td class="actions-col">
-                    <button class="btn btn-secondary btn-sm" onclick="copyToClipboard('${l.full_url}')">Copy</button>
+                    <div class="repo-actions">
+                        <button class="btn btn-secondary btn-sm" type="button" data-copy-url="${escapeHtml(fullUrl)}">Copy</button>
+                        <button class="btn-icon-trash" type="button" data-delete-link-id="${escapeHtml(l.id)}" aria-label="Remover link" title="Remover link">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M9 4h6m-9 3h12m-1 0-1 12a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2L7 7m3 4v6m4-6v6"/>
+                            </svg>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -1165,9 +1221,10 @@ function exportToCSV() {
         return;
     }
 
-    const headers = ['ID', 'Campaign', 'Source', 'Medium', 'Content', 'Term', 'URL Final', 'Notas'];
+    const headers = ['ID', 'Tipo', 'Campaign', 'Source', 'Medium', 'Content', 'Term', 'URL Final', 'Notas'];
     const rows = filteredLinks.map(l => [
         l.id,
+        l.link_type || 'captacao',
         l.utm_campaign,
         l.utm_source,
         l.utm_medium,
@@ -1189,6 +1246,45 @@ function exportToCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+function openDeleteLinkModal(linkId) {
+    pendingDeleteLinkId = linkId;
+    const modal = document.getElementById('delete-link-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeDeleteLinkModal() {
+    pendingDeleteLinkId = null;
+    const modal = document.getElementById('delete-link-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+async function confirmDeleteLink() {
+    if (!pendingDeleteLinkId) return;
+
+    try {
+        const res = await authFetch(`${API_BASE}/links/${encodeURIComponent(pendingDeleteLinkId)}`, { method: 'DELETE' });
+        if (!res.ok) {
+            let msg = `Erro ao remover link (status ${res.status}).`;
+            try {
+                const errData = await res.json();
+                if (errData?.detail) msg = `${msg} ${errData.detail}`;
+            } catch (_) {
+                // Ignore parsing issues for non-JSON errors.
+            }
+            alert(msg);
+            return;
+        }
+
+        showToast("Link removido com sucesso!");
+        closeDeleteLinkModal();
+        await fetchLinks();
+        applyFilters();
+    } catch (err) {
+        console.error('Delete link error:', err);
+        alert('Erro ao remover link.');
+    }
 }
 
 /** USER MANAGEMENT LOGIC **/

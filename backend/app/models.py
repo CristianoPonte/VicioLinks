@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
@@ -32,10 +32,10 @@ class ContentItem(BaseModel):
     name: str
 
 class SourceConfigData(BaseModel):
-    mediums: List[MediumItem] = []
-    contents: List[ContentItem] = []
+    mediums: List[MediumItem] = Field(default_factory=list)
+    contents: List[ContentItem] = Field(default_factory=list)
     term_config: str = "standard"
-    required_fields: List[str] = []
+    required_fields: List[str] = Field(default_factory=list)
 
 class SourceConfig(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
@@ -52,9 +52,9 @@ class LinkCreate(BaseModel):
     utm_campaign: str
     utm_content: Optional[str] = None
     utm_term: Optional[str] = None
-    custom_params: Dict[str, str] = {}
+    custom_params: Dict[str, str] = Field(default_factory=dict)
     notes: Optional[str] = None
-    dynamic_fields: Dict[str, Any] = {}
+    dynamic_fields: Dict[str, Any] = Field(default_factory=dict)
     # For Vendas mapping
     src: Optional[str] = None
     sck: Optional[str] = None
@@ -75,7 +75,7 @@ class Link(BaseModel):
     src: Optional[str] = None
     sck: Optional[str] = None
     xcode: Optional[str] = None
-    custom_params: Dict[str, str] = {}
+    custom_params: Dict[str, str] = Field(default_factory=dict)
     notes: Optional[str] = None
     created_by: str
     created_at: datetime
