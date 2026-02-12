@@ -23,10 +23,13 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 def get_user(db, username: str):
-    doc_ref = db.collection("users").document(username)
-    doc = doc_ref.get()
-    if doc.exists:
-        return UserInDB(**doc.to_dict())
+    try:
+        # Supabase query: select * from users where username = username
+        response = db.table("users").select("*").eq("username", username).execute()
+        if response.data and len(response.data) > 0:
+            return UserInDB(**response.data[0])
+    except Exception as e:
+        print(f"Error fetching user: {e}")
     return None
 
 def authenticate_user(db, username: str, password: str):

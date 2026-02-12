@@ -237,12 +237,12 @@ function setupEventListeners() {
         const sourceSlug = e.target.value;
         updateMediums(sourceSlug);
         updateDynamicFields(sourceSlug);
-        const subtype = document.getElementById('subtype');
-        if (subtype) updateContents(subtype.value);
+        // Update contents based on Source now
+        updateContents(sourceSlug);
     });
-    addListener('subtype', 'change', (e) => {
-        updateContents(e.target.value);
-    });
+
+    // Medium change does NOT affect contents anymore
+    // addListener('subtype', 'change', (e) => { ... });
 
     // --- Repository Filters ---
     addListener('search-links', 'input', applyFilters);
@@ -250,23 +250,18 @@ function setupEventListeners() {
     addListener('filter-source', 'change', (e) => {
         const sourceSlug = e.target.value;
         const source = sourceConfigs.find(s => s.slug === sourceSlug);
-        populateSelect('filter-medium', source ? source.mediums : []);
+        populateSelect('filter-medium', source ? (source.config?.mediums || []) : []);
+        // Populate contents directly from Source
+        populateSelect('filter-content', source ? (source.config?.contents || []) : []);
+
         const mediumSelect = document.getElementById('filter-medium');
         if (mediumSelect) {
             mediumSelect.disabled = !source;
             mediumSelect.value = "";
         }
-        populateSelect('filter-content', []);
         applyFilters();
     });
-    addListener('filter-medium', 'change', (e) => {
-        const sourceSlug = document.getElementById('filter-source').value;
-        const source = sourceConfigs.find(s => s.slug === sourceSlug);
-        const mediumSlug = e.target.value;
-        const medium = source ? source.mediums.find(m => m.slug === mediumSlug) : null;
-        populateSelect('filter-content', medium ? medium.allowed_contents : []);
-        applyFilters();
-    });
+    addListener('filter-medium', 'change', applyFilters); // Just apply filters, don't update contents
     addListener('filter-content', 'change', applyFilters);
     addListener('filter-term', 'input', applyFilters);
 
@@ -286,21 +281,14 @@ function setupEventListeners() {
     addListener('admin-content-source-filter', 'change', (e) => {
         const sourceSlug = e.target.value;
         const source = sourceConfigs.find(s => s.slug === sourceSlug);
-        populateSelect('admin-content-medium-filter', source ? source.mediums : []);
-        const mediumSelect = document.getElementById('admin-content-medium-filter');
-        if (mediumSelect) {
-            mediumSelect.disabled = !source;
-            mediumSelect.value = "";
-        }
         adminSelectedSource = sourceSlug;
-        adminSelectedMedium = null;
+        // adminSelectedMedium = null; // No longer needed
         renderContentsTab();
     });
 
-    addListener('admin-content-medium-filter', 'change', (e) => {
-        adminSelectedMedium = e.target.value;
-        renderContentsTab();
-    });
+    // Validating if we need to remove specific medium listener for admin content? 
+    // Yes, it was removed from HTML, so listener is moot, but code cleanup is good.
+    // Removed: addListener('admin-content-medium-filter', ...);
 
     // Form Submissions
     addListener('link-form', 'submit', handleGenerateLink);
@@ -460,26 +448,32 @@ function applyFilters() {
 
 // Cascading Logic
 function updateMediums(sourceSlug) {
-    const config = sourceConfigs.find(s => s.slug === sourceSlug);
-    populateSelect('subtype', config ? config.mediums : []);
+    const source = sourceConfigs.find(s => s.slug === sourceSlug);
+    // New structure: source.config.mediums
+    populateSelect('subtype', source ? (source.config?.mediums || []) : []);
 }
 
-function updateContents(mediumSlug) {
-    const sourceSlug = document.getElementById('channel').value;
+function updateContents(sourceSlug) {
+    if (!sourceSlug || typeof sourceSlug !== 'string') {
+        const el = document.getElementById('channel');
+        sourceSlug = el ? el.value : null;
+    }
     const source = sourceConfigs.find(s => s.slug === sourceSlug);
-    const medium = source ? source.mediums.find(m => m.slug === mediumSlug) : null;
-    populateSelect('content-select', medium ? medium.allowed_contents : []);
+    // Populate content based on SOURCE.
+    populateSelect('content-select', source ? (source.config?.contents || []) : []);
 }
 
 function updateDynamicFields(sourceSlug) {
-    const config = sourceConfigs.find(s => s.slug === sourceSlug);
+    const source = sourceConfigs.find(s => s.slug === sourceSlug);
     const container = document.getElementById('dynamic-fields-container');
     if (!container) return;
 
     container.innerHTML = '';
-    if (!config) return;
+    if (!source || !source.config) return;
 
-    if (config.required_fields.includes('date') || config.term_config === 'standard') {
+    const config = source.config;
+
+    if (config.required_fields && (config.required_fields.includes('date') || config.term_config === 'standard')) {
         const today = new Date().toISOString().split('T')[0];
         container.innerHTML = `
             <div class="form-group">
@@ -636,10 +630,14 @@ function editItem(type, slug, parentS = null, parentM = null) {
         formId = 'admin-source-form-new';
     } else if (type === 'mediums') {
         const source = sourceConfigs.find(s => s.slug === parentS);
-        item = source.mediums.find(m => m.slug === slug);
+        item = source.config.mediums.find(m => m.slug === slug);
         formId = 'admin-medium-form-new';
     } else if (type === 'contents') {
-        item = { slug: slug }; // Content is just a string
+        const source = sourceConfigs.find(s => s.slug === parentS);
+        if (source && source.config && source.config.contents) {
+            item = source.config.contents.find(c => c.slug === slug);
+        }
+        if (!item) item = { slug: slug, name: slug }; // Fallback
         formId = 'admin-content-form-new';
     } else if (type === 'launches') {
         item = { slug: slug, nome: slug };
@@ -662,15 +660,13 @@ function editItem(type, slug, parentS = null, parentM = null) {
         if (form) {
             const slugInput = form.querySelector('input[id*="slug"]');
             const nameInput = form.querySelector('input[id*="name"]');
-            const valInput = form.querySelector('input[id*="value"]');
 
             if (slugInput) slugInput.value = item.slug || "";
             if (nameInput) nameInput.value = item.nome || item.name || "";
-            if (valInput) valInput.value = slug; // for contents
 
             if (type === 'source-configs') {
                 const termInput = document.getElementById('source-new-term');
-                if (termInput) termInput.value = item.term_config || "standard";
+                if (termInput) termInput.value = item.config?.term_config || "standard";
             }
 
             const submitBtn = form.querySelector('button[type="submit"] span');
@@ -780,7 +776,7 @@ function renderSourcesTab() {
             <div class="admin-item">
                 <div class="info">
                     <span>${s.name}</span>
-                    <span>slug: ${s.slug} | config: ${s.term_config}</span>
+                    <span>slug: ${s.slug} | config: ${s.config?.term_config || 'standard'}</span>
                 </div>
                 <div class="actions">
                     <button class="btn btn-secondary btn-sm" onclick="editItem('source-configs', '${s.slug}')">Editar</button>
@@ -798,6 +794,8 @@ function renderMediumsTab() {
     const list = document.getElementById('admin-mediums-list');
     const label = document.getElementById('current-source-label');
 
+    console.log('renderMediumsTab called', { adminSelectedSource, sourceConfigsCount: sourceConfigs.length });
+
     if (!adminSelectedSource) {
         if (area) area.classList.add('hidden');
         if (empty) empty.classList.remove('hidden');
@@ -805,12 +803,19 @@ function renderMediumsTab() {
         return;
     }
     const source = sourceConfigs.find(s => s.slug === adminSelectedSource);
+    console.log('Found source:', source);
+
     if (!source) return;
     if (area) area.classList.remove('hidden');
     if (empty) empty.classList.add('hidden');
     if (listCard) listCard.classList.remove('hidden');
     if (label) label.innerText = source.name;
-    if (list) list.innerHTML = (source.mediums || []).map(m => `
+
+    // New structure: source.config.mediums
+    const mediums = source.config?.mediums || [];
+    console.log('Mediums to render:', mediums);
+
+    if (list) list.innerHTML = mediums.map(m => `
         <div class="admin-item">
             <div class="info">
                 <span>${m.name}</span>
@@ -829,32 +834,43 @@ function renderContentsTab() {
     const empty = document.getElementById('content-empty-state');
     const listCard = document.getElementById('content-list-card');
     const list = document.getElementById('admin-contents-list');
-    const label = document.getElementById('current-medium-label');
+    const label = document.getElementById('content-current-context-label'); // Ensure ID matches HTML
 
-    if (!adminSelectedSource || !adminSelectedMedium) {
+    // Content is now based on Source only
+    if (!adminSelectedSource) {
         if (area) area.classList.add('hidden');
         if (empty) empty.classList.remove('hidden');
         if (listCard) listCard.classList.add('hidden');
         return;
     }
+
     const source = sourceConfigs.find(s => s.slug === adminSelectedSource);
-    const medium = source ? source.mediums.find(m => m.slug === adminSelectedMedium) : null;
-    if (!medium) return;
+    if (!source) return;
+
     if (area) area.classList.remove('hidden');
     if (empty) empty.classList.add('hidden');
     if (listCard) listCard.classList.remove('hidden');
-    if (label) label.innerText = `${source.name} > ${medium.name}`;
-    if (list) list.innerHTML = (medium.allowed_contents || []).map(c => `
+
+    // New structure: source.config.contents
+    const contents = source.config?.contents || [];
+
+    if (list) list.innerHTML = contents.map(c => `
         <div class="admin-item">
             <div class="info">
-                <span>${c}</span>
+                <span>${c.name}</span>
+                <span>slug: ${c.slug}</span>
             </div>
             <div class="actions">
-                <button class="btn btn-secondary btn-sm" onclick="editItem('contents', '${c}', '${source.slug}', '${medium.slug}')">Editar</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteContent('${source.slug}', '${medium.slug}', '${c}')">Remover</button>
+                <button class="btn btn-secondary btn-sm" onclick="editItem('contents', '${c.slug}', '${source.slug}')">Editar</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteContent('${source.slug}', '${c.slug}')">Remover</button>
             </div>
         </div>
     `).join('');
+
+    if (label) {
+        label.innerText = source.name;
+        label.classList.remove('hidden');
+    }
 }
 
 // Admin API Handlers
@@ -867,12 +883,25 @@ async function handleAdminSourceSubmit(e) {
     let payload;
     if (editingMode.active && editingMode.type === 'source-configs') {
         const oldSource = sourceConfigs.find(s => s.slug === editingMode.oldSlug);
-        payload = { ...oldSource, slug, name, term_config: term };
+        // Ensure config exists
+        const oldConfig = oldSource.config || { mediums: [], contents: [], required_fields: [] };
+        // Update term_config
+        oldConfig.term_config = term;
+
+        payload = { ...oldSource, slug, name, config: oldConfig };
+
         if (slug !== editingMode.oldSlug) {
             await authFetch(`${API_BASE}/source-configs/${editingMode.oldSlug}`, { method: 'DELETE' });
         }
     } else {
-        payload = { slug, name, mediums: [], term_config: term };
+        // New Source
+        const newConfig = {
+            mediums: [],
+            contents: [],
+            term_config: term,
+            required_fields: term === 'standard' ? ['date'] : []
+        };
+        payload = { slug, name, config: newConfig };
     }
 
     await authFetch(`${API_BASE}/source-configs`, {
@@ -912,41 +941,112 @@ async function handleAdminMediumSubmit(e) {
     if (e) e.preventDefault();
     const slug = document.getElementById('medium-new-slug').value;
     const name = document.getElementById('medium-new-name').value;
-    const source = sourceConfigs.find(s => s.slug === adminSelectedSource);
 
-    if (editingMode.active && editingMode.type === 'mediums') {
-        const mIdx = source.mediums.findIndex(m => m.slug === editingMode.oldSlug);
-        if (mIdx > -1) {
-            source.mediums[mIdx].slug = slug;
-            source.mediums[mIdx].name = name;
-        }
-    } else {
-        source.mediums.push({ slug, name, allowed_contents: [] });
+    console.log('handleAdminMediumSubmit called', { slug, name, adminSelectedSource });
+
+    const source = sourceConfigs.find(s => s.slug === adminSelectedSource);
+    if (!source) {
+        console.error('Source not found:', adminSelectedSource);
+        alert('Erro: Source não encontrado');
+        return;
     }
 
-    await authFetch(`${API_BASE}/source-configs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(source) });
-    resetAdminForm('admin-medium-form-new', 'mediums');
-    await fetchSourceConfigs();
-    renderAdminLists();
+    console.log('Source before modification:', JSON.parse(JSON.stringify(source)));
+
+    // Ensure config
+    if (!source.config) source.config = { mediums: [], contents: [] };
+
+    if (editingMode.active && editingMode.type === 'mediums') {
+        const mIdx = source.config.mediums.findIndex(m => m.slug === editingMode.oldSlug);
+        if (mIdx > -1) {
+            source.config.mediums[mIdx].slug = slug;
+            source.config.mediums[mIdx].name = name;
+        }
+    } else {
+        source.config.mediums.push({ slug, name });
+    }
+
+    console.log('Source after modification:', JSON.parse(JSON.stringify(source)));
+
+    try {
+        const response = await authFetch(`${API_BASE}/source-configs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(source)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API Error:', errorText);
+            alert(`Erro ao salvar: ${errorText}`);
+            return;
+        }
+
+        console.log('Medium saved successfully');
+        resetAdminForm('admin-medium-form-new', 'mediums');
+        await fetchSourceConfigs();
+        renderAdminLists();
+    } catch (error) {
+        console.error('Error saving medium:', error);
+        alert(`Erro ao salvar medium: ${error.message}`);
+    }
 }
 
 async function handleAdminContentSubmit(e) {
     if (e) e.preventDefault();
-    const val = document.getElementById('content-new-value').value.trim();
-    const source = sourceConfigs.find(s => s.slug === adminSelectedSource);
-    const medium = source.mediums.find(m => m.slug === adminSelectedMedium);
+    const slug = document.getElementById('content-new-slug').value.trim();
+    const name = document.getElementById('content-new-name').value.trim();
 
-    if (editingMode.active && editingMode.type === 'contents') {
-        const cIdx = medium.allowed_contents.indexOf(editingMode.oldSlug);
-        if (cIdx > -1) medium.allowed_contents[cIdx] = val;
-    } else {
-        medium.allowed_contents.push(val);
+    console.log('handleAdminContentSubmit called', { slug, name, adminSelectedSource });
+
+    const source = sourceConfigs.find(s => s.slug === adminSelectedSource);
+    if (!source) {
+        console.error('Source not found:', adminSelectedSource);
+        alert('Erro: Source não encontrado');
+        return;
     }
 
-    await authFetch(`${API_BASE}/source-configs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(source) });
-    resetAdminForm('admin-content-form-new', 'contents');
-    await fetchSourceConfigs();
-    renderAdminLists();
+    console.log('Source before modification:', JSON.parse(JSON.stringify(source)));
+
+    // Ensure config
+    if (!source.config) source.config = { mediums: [], contents: [] };
+    if (!source.config.contents) source.config.contents = [];
+
+    const newItem = { slug, name };
+
+    if (editingMode.active && editingMode.type === 'contents') {
+        const cIdx = source.config.contents.findIndex(c => c.slug === editingMode.oldSlug);
+        if (cIdx > -1) {
+            source.config.contents[cIdx] = newItem;
+        }
+    } else {
+        source.config.contents.push(newItem);
+    }
+
+    console.log('Source after modification:', JSON.parse(JSON.stringify(source)));
+
+    try {
+        const response = await authFetch(`${API_BASE}/source-configs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(source)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API Error:', errorText);
+            alert(`Erro ao salvar: ${errorText}`);
+            return;
+        }
+
+        console.log('Content saved successfully');
+        resetAdminForm('admin-content-form-new', 'contents');
+        await fetchSourceConfigs();
+        renderAdminLists();
+    } catch (error) {
+        console.error('Error saving content:', error);
+        alert(`Erro ao salvar content: ${error.message}`);
+    }
 }
 
 async function deleteSimpleItem(ep, id, refresh) {
@@ -956,18 +1056,22 @@ async function deleteSimpleItem(ep, id, refresh) {
 async function deleteMedium(s, m) {
     if (!confirm('Tem certeza que deseja remover este meio?')) return;
     const source = sourceConfigs.find(sc => sc.slug === s);
-    source.mediums = source.mediums.filter(ms => ms.slug !== m);
+    if (!source || !source.config) return;
+    source.config.mediums = source.config.mediums.filter(ms => ms.slug !== m);
     await authFetch(`${API_BASE}/source-configs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(source) });
-    await fetchSourceConfigs(); renderAdminLists();
+    await fetchSourceConfigs();
+    renderAdminLists();
 }
 
-async function deleteContent(s, m, c) {
+
+async function deleteContent(s, c) {
     if (!confirm('Tem certeza que deseja remover este conteúdo?')) return;
     const source = sourceConfigs.find(sc => sc.slug === s);
-    const medium = source.mediums.find(ms => ms.slug === m);
-    medium.allowed_contents = medium.allowed_contents.filter(cs => cs !== c);
+    if (!source || !source.config) return;
+    source.config.contents = source.config.contents.filter(ct => ct.slug !== c);
     await authFetch(`${API_BASE}/source-configs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(source) });
-    await fetchSourceConfigs(); renderAdminLists();
+    await fetchSourceConfigs();
+    renderAdminLists();
 }
 
 // Helpers

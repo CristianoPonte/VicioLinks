@@ -23,18 +23,25 @@ class LaunchType(BaseModel):
     slug: str # evento, passariano, perpetuo
     nome: str
 
-class MediumConfig(BaseModel):
-    slug: str  # e.g., "newsletter", "grupos_antigos"
-    name: str  # e.g., "Newsletter", "Grupos Antigos"
-    allowed_contents: List[str] = [] # e.g. ["lista_atual", "lista_antiga"]
+class MediumItem(BaseModel):
+    slug: str
+    name: str
+
+class ContentItem(BaseModel):
+    slug: str
+    name: str
+
+class SourceConfigData(BaseModel):
+    mediums: List[MediumItem] = []
+    contents: List[ContentItem] = []
+    term_config: str = "standard"
+    required_fields: List[str] = []
 
 class SourceConfig(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
     slug: str # e.g., "email", "whatsapp", "site"
     name: str # e.g., "Email", "WhatsApp"
-    mediums: List[MediumConfig] = []
-    required_fields: List[str] = [] # e.g. ["date"] for Email
-    term_config: Optional[str] = "standard" # "standard" (text+date), "no_date" (for Site)
+    config: Optional[SourceConfigData] = None
 
 class LinkCreate(BaseModel):
     link_type: str = "captacao" # captacao or vendas

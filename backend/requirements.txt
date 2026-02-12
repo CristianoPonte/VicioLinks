@@ -1,7 +1,7 @@
 fastapi
 uvicorn
-google-cloud-firestore
-pydantic
+supabase
+python-dotenv
 python-multipart
 python-dotenv
 passlib[bcrypt]

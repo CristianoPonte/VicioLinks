@@ -6,7 +6,7 @@ venv/
 .env
 
 # Database (Local Storage)
-db.json
+
 
 # OS
 .DS_Store

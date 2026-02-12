@@ -510,27 +510,24 @@
                         <div class="glass-card full-width">
                             <h3 style="margin-bottom: 1.5rem;">Content Governance</h3>
 
-                            <div class="form-grid" style="margin-bottom: 3rem;">
-                                <div class="form-group">
-                                    <label>Selecione a Source</label>
-                                    <select id="admin-content-source-filter">
-                                        <option value="" disabled selected>Select Source</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Selecione o Medium</label>
-                                    <select id="admin-content-medium-filter" disabled>
-                                        <option value="" disabled selected>Select Medium</option>
-                                    </select>
-                                </div>
+                            <div class="form-group" style="margin-bottom: 3rem;">
+                                <label>Selecione a Source</label>
+                                <select id="admin-content-source-filter">
+                                    <option value="" disabled selected>Select Source</option>
+                                </select>
                             </div>
 
                             <div id="content-management-area" class="hidden">
                                 <form id="admin-content-form-new" class="admin-form">
                                     <div class="form-grid">
                                         <div class="form-group">
-                                            <label>Content Value (ex: bio)</label>
-                                            <input type="text" id="content-new-value" placeholder="ex: bio" required>
+                                            <label>Content Slug (ex: bio)</label>
+                                            <input type="text" id="content-new-slug" placeholder="ex: bio" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Content Name (ex: Bio Link)</label>
+                                            <input type="text" id="content-new-name" placeholder="ex: Bio Link"
+                                                required>
                                         </div>
                                     </div>
                                     <div class="form-actions">
@@ -542,66 +539,66 @@
 
                             <div id="content-empty-state" class="preview-box"
                                 style="text-align: center; color: var(--text-muted);">
-                                Selecione Source e Medium para gerenciar Contents.
+                                Selecione uma Source para gerenciar Contents.
                             </div>
                         </div>
+                    </div>
 
-                        <div id="content-list-card" class="glass-card full-width hidden">
-                            <h3 style="margin-bottom: 1.5rem;">Contents for <span id="current-medium-label"
-                                    class="accent">...</span></h3>
-                            <div class="admin-list" id="admin-contents-list"></div>
+                    <div id="content-list-card" class="glass-card full-width hidden">
+                        <h3 style="margin-bottom: 1.5rem;">Contents for <span id="content-current-context-label"
+                                class="accent">...</span></h3>
+                        <div class="admin-list" id="admin-contents-list"></div>
+                    </div>
+                </div>
+    </div>
+    </section>
+    <!-- User Management Screen -->
+    <section id="screen-users" class="screen hidden">
+        <div class="screen-header">
+            <h1>Gerenciar Usuários</h1>
+            <p>Crie, edite ou remova acessos à plataforma.</p>
+        </div>
+
+        <div class="users-layout-grid">
+            <div class="glass-card user-form-container">
+                <h3 style="margin-bottom: 1.5rem;" id="user-form-title">Adicionar Novo Usuário</h3>
+                <form id="user-form" class="admin-form">
+                    <input type="hidden" id="edit-user-mode" value="false">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nome de Usuário</label>
+                            <input type="text" id="user-username" placeholder="ex: joao_link" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Senha</label>
+                            <input type="password" id="user-password" placeholder="Defina uma senha" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Nível de Permissão</label>
+                            <select id="user-role" required>
+                                <option value="user">Editor (Gera links)</option>
+                                <option value="viewer">Viewer (Apenas vê)</option>
+                                <option value="admin">Admin (Controle total)</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-            </section>
-            <!-- User Management Screen -->
-            <section id="screen-users" class="screen hidden">
-                <div class="screen-header">
-                    <h1>Gerenciar Usuários</h1>
-                    <p>Crie, edite ou remova acessos à plataforma.</p>
-                </div>
-
-                <div class="users-layout-grid">
-                    <div class="glass-card user-form-container">
-                        <h3 style="margin-bottom: 1.5rem;" id="user-form-title">Adicionar Novo Usuário</h3>
-                        <form id="user-form" class="admin-form">
-                            <input type="hidden" id="edit-user-mode" value="false">
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label>Nome de Usuário</label>
-                                    <input type="text" id="user-username" placeholder="ex: joao_link" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Senha</label>
-                                    <input type="password" id="user-password" placeholder="Defina uma senha" required>
-                                </div>
-                                <div class="form-group full-width">
-                                    <label>Nível de Permissão</label>
-                                    <select id="user-role" required>
-                                        <option value="user">Editor (Gera links)</option>
-                                        <option value="viewer">Viewer (Apenas vê)</option>
-                                        <option value="admin">Admin (Controle total)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="button" id="cancel-user-edit"
-                                    class="btn btn-secondary hidden">Cancelar</button>
-                                <button type="submit" class="btn btn-primary" id="btn-save-user"><span>Salvar
-                                        Usuário</span></button>
-                            </div>
-                        </form>
+                    <div class="form-actions">
+                        <button type="button" id="cancel-user-edit" class="btn btn-secondary hidden">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="btn-save-user"><span>Salvar
+                                Usuário</span></button>
                     </div>
+                </form>
+            </div>
 
-                    <div class="glass-card user-list-container">
-                        <h3 style="margin-bottom: 1.5rem;">Usuários Cadastrados</h3>
-                        <div class="admin-list" id="users-list">
-                            <!-- Users will be loaded here -->
-                        </div>
-                    </div>
+            <div class="glass-card user-list-container">
+                <h3 style="margin-bottom: 1.5rem;">Usuários Cadastrados</h3>
+                <div class="admin-list" id="users-list">
+                    <!-- Users will be loaded here -->
                 </div>
-            </section>
-        </main>
+            </div>
+        </div>
+    </section>
+    </main>
     </div> <!-- Close app-container -->
 
     <div id="toast" class="toast hidden">Copiado para a área de transferência!</div>

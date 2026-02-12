@@ -90,12 +90,20 @@
         "vde1f": {
             "slug": "vde1f",
             "nome": "VDE1F"
+        },
+        "carjur": {
+            "slug": "carjur",
+            "nome": "Carreiras Jur\u00eddicas"
         }
     },
     "turmas": {
         "120d": {
             "slug": "120d",
             "nome": "120d"
+        },
+        "90D": {
+            "slug": "90D",
+            "nome": "90 Dias"
         }
     },
     "launch_types": {
@@ -106,6 +114,10 @@
         "evento": {
             "slug": "evento",
             "nome": "Evento"
+        },
+        "perpetuo": {
+            "slug": "perpetuo",
+            "nome": "Perp\u00e9tuo"
         }
     },
     "launches": {
@@ -135,11 +147,29 @@
             "data_fim": null,
             "owner": "admin",
             "status": "active"
+        },
+        "vde1f_120d_passariano_03-26": {
+            "id": null,
+            "slug": "vde1f_120d_passariano_03-26",
+            "nome": "ENAM 2O26.1",
+            "data_inicio": null,
+            "data_fim": null,
+            "owner": "admin",
+            "status": "active"
+        },
+        "carjur_90D_perpetuo_03-26": {
+            "id": null,
+            "slug": "carjur_90D_perpetuo_03-26",
+            "nome": "Carreiras Jur\u00eddicas Perp\u00e9tuo",
+            "data_inicio": null,
+            "data_fim": null,
+            "owner": "admin",
+            "status": "active"
         }
     },
     "settings": {
         "link_counter": {
-            "count": 5
+            "count": 7
         }
     },
     "links": {
@@ -242,6 +272,46 @@
             "created_by": "system_user",
             "created_at": "2026-02-11 00:44:59.856751",
             "status": "active"
+        },
+        "lnk_000006": {
+            "id": "lnk_000006",
+            "link_type": "captacao",
+            "base_url": "https://metodovde.com.br/concursos/carreirasjuridicas",
+            "path": "",
+            "full_url": "https://metodovde.com.br/concursos/carreirasjuridicas?utm_source=whatsapp&utm_medium=api&utm_campaign=vde1f_120d_passariano_03-26&utm_content=lista_lanc_atual&utm_term=disparo_inaugural_11-02-2026&utm_id=lnk_000006",
+            "utm_source": "whatsapp",
+            "utm_medium": "api",
+            "utm_campaign": "vde1f_120d_passariano_03-26",
+            "utm_content": "lista_lanc_atual",
+            "utm_term": "disparo_inaugural_11-02-2026",
+            "src": null,
+            "sck": null,
+            "xcode": null,
+            "custom_params": {},
+            "notes": "ewqekwqjasdsa",
+            "created_by": "system_user",
+            "created_at": "2026-02-11 18:28:35.876700",
+            "status": "active"
+        },
+        "lnk_000007": {
+            "id": "lnk_000007",
+            "link_type": "captacao",
+            "base_url": "https://metodovde.com.br/concursos/carreirasjuridicas",
+            "path": "",
+            "full_url": "https://metodovde.com.br/concursos/carreirasjuridicas?utm_source=whatsapp&utm_medium=grupos&utm_campaign=vde1f_120d_passariano_03-26&utm_content=grupos_antigos&utm_term=publico_quente_13-10-2026&utm_id=lnk_000007",
+            "utm_source": "whatsapp",
+            "utm_medium": "grupos",
+            "utm_campaign": "vde1f_120d_passariano_03-26",
+            "utm_content": "grupos_antigos",
+            "utm_term": "publico_quente_13-10-2026",
+            "src": null,
+            "sck": null,
+            "xcode": null,
+            "custom_params": {},
+            "notes": "dsajkjdsadsa",
+            "created_by": "system_user",
+            "created_at": "2026-02-11 19:51:19.984986",
+            "status": "active"
         }
     },
     "audits": {
@@ -279,6 +349,20 @@
             "actor": "system_user",
             "action": "create",
             "timestamp": "2026-02-11 00:44:59.857631"
+        },
+        "4057f1ed-3b71-4e1a-995b-06ad88dfaaec": {
+            "event_id": "a8a5652b-1cca-461e-9584-fc827641be79",
+            "link_id": "lnk_000006",
+            "actor": "system_user",
+            "action": "create",
+            "timestamp": "2026-02-11 18:28:35.880625"
+        },
+        "45bd8423-f8d3-4325-b50a-2da60b996021": {
+            "event_id": "f2fdd72b-9425-4208-b904-be62fdcb913e",
+            "link_id": "lnk_000007",
+            "actor": "system_user",
+            "action": "create",
+            "timestamp": "2026-02-11 19:51:19.986162"
         }
     },
     "users": {
@@ -292,7 +376,7 @@
             "username": "user",
             "role": "user",
             "disabled": false,
-            "hashed_password": "$2b$12$FZNnTYhVXLru7z11VlPI/OIbE4MKinDetmGKeEwtM3zFsugtBYIYe"
+            "hashed_password": "$2b$12$yKd.BQVMfmeX0X9AB6uTme.UrNeebAXMvojWO4nR1Qosa83/y95Ya"
         },
         "viewer": {
             "username": "viewer",
