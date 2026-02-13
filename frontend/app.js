@@ -280,7 +280,7 @@ function setupEventListeners() {
         }
         applyFilters();
     });
-    addListener('filter-medium', 'change', applyFilters); // Just apply filters, don't update contents
+    addListener('filter-medium', 'change', applyFilters); // Just apply filters, no content update here
     addListener('filter-content', 'change', applyFilters);
     addListener('filter-term', 'input', applyFilters);
     addListener('filter-link-type', 'change', applyFilters);
@@ -291,6 +291,17 @@ function setupEventListeners() {
     });
 
     addListener('btn-export', 'click', exportToCSV);
+    addListener('users-list', 'click', (e) => {
+        const actionBtn = e.target.closest('button[data-user-action]');
+        if (!actionBtn) return;
+        const username = decodeURIComponent(actionBtn.dataset.username || '');
+        const role = decodeURIComponent(actionBtn.dataset.role || '');
+        if (actionBtn.dataset.userAction === 'edit') {
+            editUser(username, role);
+        } else if (actionBtn.dataset.userAction === 'delete') {
+            deleteUser(username);
+        }
+    });
 
     // --- Admin Cascading Listeners ---
     addListener('admin-medium-source-filter', 'change', (e) => {
@@ -1315,19 +1326,23 @@ function renderUsers(users) {
     list.innerHTML = '';
 
     users.forEach(u => {
+        const username = escapeHtml(u.username);
+        const role = escapeHtml(u.role);
+        const usernameEncoded = encodeURIComponent(u.username);
+        const roleEncoded = encodeURIComponent(u.role);
         const item = document.createElement('div');
-        item.className = 'user-item';
+        item.className = 'user-item admin-item';
         item.innerHTML = `
             <div class="user-info">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <h4 style="margin: 0; font-size: 0.95rem;">${u.username}</h4>
-                    <span class="role-badge" style="font-size: 0.65rem; padding: 0.1rem 0.5rem;">${u.role}</span>
-                    ${u.disabled ? '<span style="color:var(--error); font-size: 0.7rem;">(Desativado)</span>' : ''}
+                <div class="user-main">
+                    <span class="user-name">${username}</span>
+                    <span class="role-badge">${role}</span>
+                    ${u.disabled ? '<span class="user-disabled">(Desativado)</span>' : ''}
                 </div>
             </div>
             <div class="actions">
-                <button class="btn btn-secondary btn-sm" onclick="editUser('${u.username}', '${u.role}')">Editar</button>
-                ${u.username !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.username}')">Excluir</button>` : ''}
+                <button class="btn btn-secondary btn-sm" type="button" data-user-action="edit" data-username="${usernameEncoded}" data-role="${roleEncoded}">Editar</button>
+                ${u.username !== 'admin' ? `<button class="btn btn-danger btn-sm" type="button" data-user-action="delete" data-username="${usernameEncoded}">Excluir</button>` : ''}
             </div>
         `;
         list.appendChild(item);

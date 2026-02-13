@@ -277,10 +277,9 @@
                         <div class="glass-card full-width" style="margin-bottom: 3rem;">
                             <h3 style="margin-bottom: 2rem;">Campaign Slug Generator</h3>
                             <div class="campaign-generator-block" style="margin-bottom: 0;">
-                                <div class="generator-grid"
-                                    style="grid-template-columns: repeat(4, 1fr); align-items: flex-end; gap: 1.5rem;">
+                                <div class="generator-grid campaign-generator-grid">
                                     <!-- Row 1 -->
-                                    <div class="form-group" style="grid-column: span 2;">
+                                    <div class="form-group campaign-name-group">
                                         <label for="gen-campaign-name">Campaign Name (Nome Amigável)</label>
                                         <input type="text" id="gen-campaign-name" placeholder="Ex: VDE ENAM 2026.1"
                                             required>
@@ -338,8 +337,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-actions"
-                                        style="grid-column: span 2; margin-top: 0; justify-content: flex-end;">
+                                    <div class="form-actions campaign-save-actions">
                                         <button id="btn-save-campaign" class="btn btn-primary">
                                             <span>Salvar Campaign</span>
                                         </button>
@@ -574,7 +572,7 @@
 
         <div class="users-layout-grid">
             <div class="glass-card user-form-container">
-                <h3 style="margin-bottom: 1.5rem;" id="user-form-title">Adicionar Novo Usuário</h3>
+                <h3 id="user-form-title">Adicionar Novo Usuário</h3>
                 <form id="user-form" class="admin-form">
                     <input type="hidden" id="edit-user-mode" value="false">
                     <div class="form-grid">
@@ -604,7 +602,7 @@
             </div>
 
             <div class="glass-card user-list-container">
-                <h3 style="margin-bottom: 1.5rem;">Usuários Cadastrados</h3>
+                <h3>Usuários Cadastrados</h3>
                 <div class="admin-list" id="users-list">
                     <!-- Users will be loaded here -->
                 </div>
